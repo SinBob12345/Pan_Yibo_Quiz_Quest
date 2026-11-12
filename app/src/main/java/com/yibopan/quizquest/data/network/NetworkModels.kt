@@ -1,5 +1,9 @@
 package com.yibopan.quizquest.data.network
 
+import com.yibopan.quizquest.data.model.Category
+import com.yibopan.quizquest.data.model.Difficulty
+import com.yibopan.quizquest.data.model.Question
+import com.yibopan.quizquest.data.model.QuestionType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -48,4 +52,21 @@ data class TokenResponse(
     @SerialName("response_code") val responseCode: Int,
     @SerialName("response_message") val responseMessage: String? = null,
     @SerialName("token") val token: String? = null,
+)
+
+/** Maps a [NetworkCategory] to a domain [Category], decoding the URL3986 name. */
+fun NetworkCategory.toCategory(): Category = Category(
+    id = id,
+    name = TextDecoder.decodeUrl3986(name),
+)
+
+/** Maps a [NetworkQuestion] to a domain [Question], decoding all URL3986 text fields. */
+fun NetworkQuestion.toQuestion(categoryId: Int = 0, id: Long = 0L): Question = Question(
+    id = id,
+    categoryId = categoryId,
+    difficulty = Difficulty.fromApi(TextDecoder.decodeUrl3986(difficulty)),
+    type = QuestionType.fromApi(TextDecoder.decodeUrl3986(type)),
+    text = TextDecoder.decodeUrl3986(question),
+    correctAnswer = TextDecoder.decodeUrl3986(correctAnswer),
+    incorrectAnswers = incorrectAnswers.map { TextDecoder.decodeUrl3986(it) },
 )
