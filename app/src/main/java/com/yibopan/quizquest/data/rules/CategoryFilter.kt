@@ -15,5 +15,10 @@ object CategoryFilter {
     val ALLOWED_CATEGORY_IDS: Set<Int> = setOf(9, 17, 18, 19, 22, 23, 27)
 
     /** Keeps only allowed categories, preserving their order. */
-    fun filterAllowed(categories: List<Category>): List<Category> = TODO("Stage 2")
+    fun filterAllowed(categories: List<Category>): List<Category> {
+        return categories.filter { it.id in ALLOWED_CATEGORY_IDS }
+    }
+
+    /** Checks whether a single category ID is allowed. */
+    fun isAllowed(categoryId: Int): Boolean = categoryId in ALLOWED_CATEGORY_IDS
 }
