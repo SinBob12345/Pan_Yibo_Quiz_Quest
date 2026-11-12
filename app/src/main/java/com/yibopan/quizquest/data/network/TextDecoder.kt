@@ -1,5 +1,8 @@
 package com.yibopan.quizquest.data.network
 
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+
 /**
  * Stage 2 — decodes strings returned with `encode=url3986`.
  *
@@ -9,5 +12,13 @@ package com.yibopan.quizquest.data.network
  */
 object TextDecoder {
 
-    fun decodeUrl3986(encoded: String): String = TODO("Stage 2")
+    fun decodeUrl3986(encoded: String): String {
+        if (encoded.isEmpty()) return encoded
+        return try {
+            val safeEncoded = encoded.replace("+", "%2B")
+            URLDecoder.decode(safeEncoded, StandardCharsets.UTF_8.name())
+        } catch (_: Exception) {
+            encoded
+        }
+    }
 }
