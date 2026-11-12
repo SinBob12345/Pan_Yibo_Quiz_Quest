@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 12+ backup rules (A2 slide 25: "exclude sensitive data from backup").
+    - Cloud backup: the Room database (learning history, answers, review cards and settings)
+      is NOT uploaded to the cloud.
+    - Device-to-device transfer: no rules => everything moves to the learner's new phone.
+    Learners can also move their data themselves with "Export my data" (Privacy screen).
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="." />
+    </cloud-backup>
+</data-extraction-rules>
