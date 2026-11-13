@@ -1,5 +1,10 @@
 package com.yibopan.quizquest.di
 
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.yibopan.quizquest.data.network.RateLimiter
+import com.yibopan.quizquest.data.network.TriviaAPI
+import com.yibopan.quizquest.data.repository.TriviaRepository
+import com.yibopan.quizquest.data.repository.TriviaRepositoryImpl
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
 import com.yibopan.quizquest.viewmodel.HomeViewModel
@@ -10,9 +15,15 @@ import com.yibopan.quizquest.viewmodel.ReviewViewModel
 import com.yibopan.quizquest.viewmodel.SettingsViewModel
 import com.yibopan.quizquest.viewmodel.StatsViewModel
 import com.yibopan.quizquest.viewmodel.WorldMapViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 
 /**
  * All Koin definitions of the app (Lecture 4: "Create a new package named di ... Modules").
@@ -25,22 +36,33 @@ import org.koin.dsl.module
 val appModules = module {
 
     // ----- Lecture 5: dispatcher for repositories (injected so tests can replace it) -----
-    single { Dispatchers.IO }
+    single<CoroutineDispatcher> { Dispatchers.IO }
     single<TimeProvider> { SystemTimeProvider }
 
     // ----- Lecture 5 + Lecture 8: networking (Stage 2) -----
-    // TODO(Stage 2) single { OkHttpClient } with connect/read timeouts
-    // TODO(Stage 2) single { Retrofit } with Json { ignoreUnknownKeys = true }, the converter factory,
-    //               client(get()) and TriviaAPI.BASE_URL
-    // TODO(Stage 2) single { get<Retrofit>().create(TriviaAPI::class.java) }
-    // TODO(Stage 2) single { RateLimiter() }
+    single {
+        OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .build()
+    }
+    single {
+        val json = Json { ignoreUnknownKeys = true }
+        Retrofit.Builder()
+            .baseUrl(TriviaAPI.BASE_URL)
+            .client(get())
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+    }
+    single { get<Retrofit>().create(TriviaAPI::class.java) }
+    single { RateLimiter() }
 
     // ----- Lecture 7: Room database + DAOs (Stage 4) -----
     // TODO(Stage 4) single { Room.databaseBuilder(androidContext(), QuizDatabase::class.java, "quiz-database").build() }
     // TODO(Stage 4) single { get<QuizDatabase>().questionDao() }  ... one line per DAO
 
     // ----- Lecture 4: repositories (interface -> implementation) -----
-    // TODO(Stage 2) single<TriviaRepository> { TriviaRepositoryImpl(get(), get(), get()) }
+    single<TriviaRepository> { TriviaRepositoryImpl(get<TriviaAPI>(), get<RateLimiter>(), get<CoroutineDispatcher>()) }
     // TODO(Stage 4) ProgressRepository, ReviewRepository, StatsRepository, SettingsRepository
     // TODO(Stage 7) PrivacyRepository
 
