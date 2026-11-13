@@ -129,7 +129,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 onQuizFinished = { sessionId ->
                     // Remove the finished quiz from the back stack, so Back on the Result
                     // screen returns to the world map instead of a finished quiz.
-                    navController.navigate(Screens.ResultScreen.createRoute(sessionId)) {
+                    navController.navigate(Screens.ResultScreen.createRoute(sessionId, categoryId, level)) {
                         popUpTo(Screens.WorldMapScreen.routeWithArgs) { inclusive = false }
                     }
                 },
@@ -140,16 +140,22 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             route = Screens.ResultScreen.routeWithArgs,
             arguments = listOf(
                 navArgument(Screens.ARG_SESSION_ID) { type = NavType.LongType },
+                navArgument(Screens.ARG_CATEGORY_ID) { type = NavType.IntType; defaultValue = 0 },
+                navArgument(Screens.ARG_LEVEL) { type = NavType.IntType; defaultValue = 1 },
             ),
         ) { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getLong(Screens.ARG_SESSION_ID) ?: 0L
+            val categoryId = backStackEntry.arguments?.getInt(Screens.ARG_CATEGORY_ID) ?: 0
+            val level = backStackEntry.arguments?.getInt(Screens.ARG_LEVEL) ?: 1
             ResultScreen(
                 sessionId = sessionId,
+                categoryId = categoryId,
+                level = level,
                 onBackToMapClicked = {
                     navController.popBackStack(Screens.WorldMapScreen.routeWithArgs, inclusive = false)
                 },
-                onNextLevelClicked = { categoryId, level ->
-                    navController.navigate(Screens.QuizScreen.createRoute(categoryId, level)) {
+                onNextLevelClicked = { nextCategoryId, nextLevel ->
+                    navController.navigate(Screens.QuizScreen.createRoute(nextCategoryId, nextLevel)) {
                         popUpTo(Screens.WorldMapScreen.routeWithArgs) { inclusive = false }
                     }
                 },

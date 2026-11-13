@@ -27,8 +27,8 @@ sealed class Screens(val route: String) {
     }
 
     object ResultScreen : Screens("result") {
-        val routeWithArgs = "$route/{$ARG_SESSION_ID}"
-        fun createRoute(sessionId: Long) = "$route/$sessionId"
+        val routeWithArgs = "$route/{$ARG_SESSION_ID}/{$ARG_CATEGORY_ID}/{$ARG_LEVEL}"
+        fun createRoute(sessionId: Long, categoryId: Int = 0, level: Int = 1) = "$route/$sessionId/$categoryId/$level"
     }
 
     companion object {

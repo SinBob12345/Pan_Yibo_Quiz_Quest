@@ -35,10 +35,12 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun ResultScreen(
     sessionId: Long,
+    categoryId: Int = 0,
+    level: Int = 1,
     onBackToMapClicked: () -> Unit,
     onNextLevelClicked: (categoryId: Int, level: Int) -> Unit,
 ) {
-    val resultViewModel: ResultViewModel = koinViewModel(parameters = { parametersOf(sessionId) })
+    val resultViewModel: ResultViewModel = koinViewModel(parameters = { parametersOf(sessionId, categoryId, level) })
     val resultUIState by resultViewModel.uiState.collectAsStateWithLifecycle()
     ResultScreenContent(
         uiState = resultUIState,
