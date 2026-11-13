@@ -1,5 +1,6 @@
 package com.yibopan.quizquest.data.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
@@ -7,8 +8,7 @@ import androidx.room.TypeConverters
 /**
  * Room database for QuizQuest (Lecture 7: CatDatabase).
  *
- * Version 1 includes all 8 entity tables:
- * Category, Question, FlaggedQuestion, LevelProgress, QuizSession, AnswerRecord, ReviewCard, Settings.
+ * Version 2 adds `timeTakenMs` column to [AnswerRecordEntity] via [AutoMigration] from 1 to 2.
  */
 @Database(
     entities = [
@@ -21,7 +21,10 @@ import androidx.room.TypeConverters
         ReviewCardEntity::class,
         SettingsEntity::class,
     ],
-    version = 1,
+    version = 2,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+    ],
     exportSchema = true,
 )
 @TypeConverters(QuizTypeConverters::class)
