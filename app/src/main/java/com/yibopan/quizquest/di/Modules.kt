@@ -1,6 +1,8 @@
 package com.yibopan.quizquest.di
 
+import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.yibopan.quizquest.data.database.QuizDatabase
 import com.yibopan.quizquest.data.network.RateLimiter
 import com.yibopan.quizquest.data.network.TriviaAPI
 import com.yibopan.quizquest.data.repository.TriviaRepository
@@ -20,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -58,8 +61,21 @@ val appModules = module {
     single { RateLimiter() }
 
     // ----- Lecture 7: Room database + DAOs (Stage 4) -----
-    // TODO(Stage 4) single { Room.databaseBuilder(androidContext(), QuizDatabase::class.java, "quiz-database").build() }
-    // TODO(Stage 4) single { get<QuizDatabase>().questionDao() }  ... one line per DAO
+    single {
+        Room.databaseBuilder(
+            androidContext(),
+            QuizDatabase::class.java,
+            "quiz-database",
+        ).build()
+    }
+    single { get<QuizDatabase>().categoryDao() }
+    single { get<QuizDatabase>().questionDao() }
+    single { get<QuizDatabase>().flaggedQuestionDao() }
+    single { get<QuizDatabase>().levelProgressDao() }
+    single { get<QuizDatabase>().quizSessionDao() }
+    single { get<QuizDatabase>().answerRecordDao() }
+    single { get<QuizDatabase>().reviewCardDao() }
+    single { get<QuizDatabase>().settingsDao() }
 
     // ----- Lecture 4: repositories (interface -> implementation) -----
     single<TriviaRepository> { TriviaRepositoryImpl(get<TriviaAPI>(), get<RateLimiter>(), get<CoroutineDispatcher>()) }
@@ -70,7 +86,9 @@ val appModules = module {
     viewModel { HomeViewModel() }
     viewModel { (categoryId: Int) -> WorldMapViewModel(categoryId = categoryId) }
     viewModel { (categoryId: Int, level: Int) -> QuizViewModel(categoryId = categoryId, level = level) }
-    viewModel { (sessionId: Long) -> ResultViewModel(sessionId = sessionId) }
+    viewModel { (sessionId: Long, categoryId: Int, level: Int) ->
+        ResultViewModel(sessionId = sessionId, categoryId = categoryId, level = level)
+    }
     viewModel { ReviewViewModel() }
     viewModel { StatsViewModel() }
     viewModel { SettingsViewModel() }
