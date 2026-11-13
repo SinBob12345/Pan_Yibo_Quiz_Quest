@@ -11,6 +11,7 @@ import com.yibopan.quizquest.data.model.Difficulty
 import com.yibopan.quizquest.data.model.LevelProgress
 import com.yibopan.quizquest.data.model.Question
 import com.yibopan.quizquest.data.model.QuestionType
+import com.yibopan.quizquest.data.model.QuizResult
 import com.yibopan.quizquest.data.model.RetentionPeriod
 import com.yibopan.quizquest.data.model.ReviewCard
 import com.yibopan.quizquest.data.model.ThemeMode
@@ -151,6 +152,9 @@ fun Question.toEntity(fetchedAt: Long, used: Boolean = false): QuestionEntity = 
     used = used,
 )
 
+fun FlaggedQuestionEntity.toQuestionText(): String = questionText
+fun String.toFlaggedEntity(flaggedAt: Long): FlaggedQuestionEntity = FlaggedQuestionEntity(questionText = this, flaggedAt = flaggedAt)
+
 fun LevelProgressEntity.toLevelProgress(): LevelProgress = LevelProgress(
     categoryId = categoryId,
     level = level,
@@ -164,6 +168,28 @@ fun LevelProgress.toEntity(updatedAt: Long): LevelProgressEntity = LevelProgress
     stars = stars,
     bestScore = bestScore,
     updatedAt = updatedAt,
+)
+
+fun QuizSessionEntity.toQuizResult(): QuizResult = QuizResult(
+    sessionId = id,
+    categoryId = categoryId,
+    level = level,
+    correctCount = correctCount,
+    totalCount = totalCount,
+    stars = stars,
+    startedAt = startedAt,
+    durationMs = durationMs,
+)
+
+fun QuizResult.toEntity(): QuizSessionEntity = QuizSessionEntity(
+    id = sessionId,
+    categoryId = categoryId,
+    level = level,
+    startedAt = startedAt,
+    durationMs = durationMs,
+    correctCount = correctCount,
+    totalCount = totalCount,
+    stars = stars,
 )
 
 fun AnswerRecordEntity.toAnswerRecord(): AnswerRecord = AnswerRecord(

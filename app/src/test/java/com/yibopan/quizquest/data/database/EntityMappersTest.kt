@@ -6,6 +6,7 @@ import com.yibopan.quizquest.data.model.Difficulty
 import com.yibopan.quizquest.data.model.LevelProgress
 import com.yibopan.quizquest.data.model.Question
 import com.yibopan.quizquest.data.model.QuestionType
+import com.yibopan.quizquest.data.model.QuizResult
 import com.yibopan.quizquest.data.model.RetentionPeriod
 import com.yibopan.quizquest.data.model.ReviewCard
 import com.yibopan.quizquest.data.model.ThemeMode
@@ -57,12 +58,51 @@ class EntityMappersTest {
     }
 
     @Test
+    fun `FlaggedQuestionEntity and String mapping`() {
+        val questionText = "Inappropriate Question"
+        val entity = questionText.toFlaggedEntity(flaggedAt = 1234L)
+
+        assertEquals(FlaggedQuestionEntity("Inappropriate Question", 1234L), entity)
+        assertEquals(questionText, entity.toQuestionText())
+    }
+
+    @Test
     fun `LevelProgressEntity and LevelProgress mapping`() {
         val progress = LevelProgress(categoryId = 17, level = 2, stars = 3, bestScore = 10)
         val entity = progress.toEntity(updatedAt = 2000L)
 
         assertEquals(LevelProgressEntity(17, 2, 3, 10, 2000L), entity)
         assertEquals(progress, entity.toLevelProgress())
+    }
+
+    @Test
+    fun `QuizSessionEntity and QuizResult mapping`() {
+        val result = QuizResult(
+            sessionId = 15L,
+            categoryId = 17,
+            level = 2,
+            correctCount = 8,
+            totalCount = 10,
+            stars = 2,
+            startedAt = 10000L,
+            durationMs = 45000L,
+        )
+        val entity = result.toEntity()
+
+        assertEquals(
+            QuizSessionEntity(
+                id = 15L,
+                categoryId = 17,
+                level = 2,
+                startedAt = 10000L,
+                durationMs = 45000L,
+                correctCount = 8,
+                totalCount = 10,
+                stars = 2,
+            ),
+            entity,
+        )
+        assertEquals(result, entity.toQuizResult())
     }
 
     @Test
@@ -146,5 +186,25 @@ class EntityMappersTest {
             entity,
         )
         assertEquals(settings, entity.toUserSettings())
+    }
+
+    @Test
+    fun `SettingsEntity fallback for invalid enum strings`() {
+        val invalidEntity = SettingsEntity(
+            id = 0,
+            questionsPerLevel = 10,
+            timerMode = "INVALID",
+            soundEnabled = true,
+            reduceMotion = false,
+            themeMode = "INVALID",
+            dailyGoalLevels = 3,
+            answerRetention = "INVALID",
+        )
+
+        val settings = invalidEntity.toUserSettings()
+
+        assertEquals(TimerMode.OFF, settings.timerMode)
+        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(RetentionPeriod.DAYS_90, settings.answerRetention)
     }
 }
