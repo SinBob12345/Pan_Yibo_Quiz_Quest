@@ -2,6 +2,7 @@ package com.yibopan.quizquest.data.rules
 
 import com.yibopan.quizquest.data.model.AnswerRecord
 import com.yibopan.quizquest.data.model.Question
+import com.yibopan.quizquest.data.model.QuestionType
 import kotlin.random.Random
 
 /**
@@ -44,17 +45,87 @@ class QuizEngine(
     private val random: Random = Random.Default,
 ) {
 
-    fun start(questions: List<Question>): QuizState = TODO("Stage 3")
+    fun start(questions: List<Question>): QuizState {
+        val optionsList = questions.map { shuffler.optionsFor(it) }
+        return QuizState(
+            questions = questions,
+            options = optionsList,
+            currentIndex = 0,
+            selectedAnswer = null,
+            correctCount = 0,
+            hintsLeft = DEFAULT_HINTS,
+            removedOptions = emptySet(),
+            answers = emptyList(),
+        )
+    }
 
-    fun selectAnswer(state: QuizState, answer: String, timeTakenMs: Long): QuizState = TODO("Stage 3")
+    fun selectAnswer(state: QuizState, answer: String, timeTakenMs: Long): QuizState {
+        val currentQ = state.currentQuestion ?: return state
+        if (state.isAnswered || state.isFinished) return state
 
-    fun timeUp(state: QuizState, timeTakenMs: Long): QuizState = TODO("Stage 3")
+        val isCorrect = (answer == currentQ.correctAnswer)
+        val record = AnswerRecord(
+            questionText = currentQ.text,
+            chosenAnswer = answer,
+            correctAnswer = currentQ.correctAnswer,
+            isCorrect = isCorrect,
+            timeTakenMs = timeTakenMs,
+        )
 
-    fun next(state: QuizState): QuizState = TODO("Stage 3")
+        return state.copy(
+            selectedAnswer = answer,
+            correctCount = if (isCorrect) state.correctCount + 1 else state.correctCount,
+            answers = state.answers + record,
+        )
+    }
 
-    fun useFiftyFifty(state: QuizState): QuizState = TODO("Stage 3")
+    fun timeUp(state: QuizState, timeTakenMs: Long): QuizState {
+        val currentQ = state.currentQuestion ?: return state
+        if (state.isAnswered || state.isFinished) return state
+
+        val record = AnswerRecord(
+            questionText = currentQ.text,
+            chosenAnswer = null,
+            correctAnswer = currentQ.correctAnswer,
+            isCorrect = false,
+            timeTakenMs = timeTakenMs,
+        )
+
+        return state.copy(
+            selectedAnswer = TIME_UP_SELECTION,
+            answers = state.answers + record,
+        )
+    }
+
+    fun next(state: QuizState): QuizState {
+        if (!state.isAnswered || state.isFinished) return state
+        return state.copy(
+            currentIndex = state.currentIndex + 1,
+            selectedAnswer = null,
+            removedOptions = emptySet(),
+        )
+    }
+
+    fun useFiftyFifty(state: QuizState): QuizState {
+        val currentQ = state.currentQuestion ?: return state
+        if (currentQ.type != QuestionType.MULTIPLE ||
+            state.isAnswered ||
+            state.isFinished ||
+            state.hintsLeft <= 0 ||
+            state.removedOptions.isNotEmpty()
+        ) {
+            return state
+        }
+
+        val wrongToHide = currentQ.incorrectAnswers.shuffled(random).take(2).toSet()
+        return state.copy(
+            hintsLeft = state.hintsLeft - 1,
+            removedOptions = wrongToHide,
+        )
+    }
 
     companion object {
         const val DEFAULT_HINTS = 2
+        private const val TIME_UP_SELECTION = ""
     }
 }

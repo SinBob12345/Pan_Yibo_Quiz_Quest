@@ -14,7 +14,7 @@ import kotlin.random.Random
 class AnswerShuffler(private val random: Random = Random.Default) {
 
     fun optionsFor(question: Question): List<String> = when (question.type) {
-        QuestionType.MULTIPLE -> TODO("Stage 3: shuffle with random")
-        QuestionType.BOOLEAN -> TODO("Stage 3: return listOf(\"True\", \"False\")")
+        QuestionType.MULTIPLE -> (listOf(question.correctAnswer) + question.incorrectAnswers).shuffled(random)
+        QuestionType.BOOLEAN -> listOf("True", "False")
     }
 }
