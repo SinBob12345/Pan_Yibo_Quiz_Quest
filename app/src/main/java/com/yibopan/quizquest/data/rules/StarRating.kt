@@ -18,5 +18,17 @@ object StarRating {
     /** Minimum stars needed to pass a level and unlock the next one. */
     const val PASS_STARS = 1
 
-    fun starsFor(correct: Int, total: Int): Int = TODO("Stage 3: implement the star rules above")
+    fun starsFor(correct: Int, total: Int): Int {
+        require(correct >= 0 && total >= 0 && correct <= total) {
+            "Invalid score: correct=$correct, total=$total"
+        }
+        if (total == 0) return 0
+        val percentage = (correct.toDouble() / total.toDouble()) * 100.0
+        return when {
+            percentage >= 100.0 -> 3
+            percentage >= 80.0 -> 2
+            percentage >= 60.0 -> 1
+            else -> 0
+        }
+    }
 }

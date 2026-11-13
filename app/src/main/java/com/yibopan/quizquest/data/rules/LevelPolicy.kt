@@ -15,8 +15,23 @@ object LevelPolicy {
 
     const val LEVELS_PER_WORLD = 9
 
-    fun difficultyFor(level: Int): Difficulty = TODO("Stage 3")
+    fun difficultyFor(level: Int): Difficulty {
+        require(level in 1..LEVELS_PER_WORLD) {
+            "Level must be between 1 and $LEVELS_PER_WORLD, got $level"
+        }
+        return when (level) {
+            in 1..3 -> Difficulty.EASY
+            in 4..6 -> Difficulty.MEDIUM
+            else -> Difficulty.HARD
+        }
+    }
 
     /** @param previousLevelStars stars of level-1, or null if it was never played. */
-    fun isUnlocked(level: Int, previousLevelStars: Int?): Boolean = TODO("Stage 3")
+    fun isUnlocked(level: Int, previousLevelStars: Int?): Boolean {
+        require(level in 1..LEVELS_PER_WORLD) {
+            "Level must be between 1 and $LEVELS_PER_WORLD, got $level"
+        }
+        if (level == 1) return true
+        return previousLevelStars != null && previousLevelStars >= StarRating.PASS_STARS
+    }
 }
