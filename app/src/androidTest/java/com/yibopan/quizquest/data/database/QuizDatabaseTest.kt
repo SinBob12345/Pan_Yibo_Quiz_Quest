@@ -71,7 +71,105 @@ class QuizDatabaseTest {
     }
 
     @Test
-    fun insertAndGetSettings() = runBlocking {
+    fun getUnusedQuestionsFiltersOutUsedAndFlaggedQuestions() = runBlocking {
+        val questionDao = db.questionDao()
+        val flaggedDao = db.flaggedQuestionDao()
+
+        val q1 = QuestionEntity(id = 1L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Q1", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 1000L, used = false)
+        val q2 = QuestionEntity(id = 2L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Q2", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 1000L, used = true)
+        val q3 = QuestionEntity(id = 3L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Q3", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 1000L, used = false)
+
+        questionDao.insertAll(listOf(q1, q2, q3))
+        flaggedDao.insert(FlaggedQuestionEntity("Q3", flaggedAt = 2000L))
+
+        val unused = questionDao.getUnusedQuestions(categoryId = 17, difficulty = "easy", amount = 10)
+
+        assertEquals(1, unused.size)
+        assertEquals("Q1", unused[0].text)
+    }
+
+    @Test
+    fun markAsUsedUpdatesQuestionStatus() = runBlocking {
+        val questionDao = db.questionDao()
+        val q1 = QuestionEntity(id = 1L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Q1", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 1000L, used = false)
+        questionDao.insertAll(listOf(q1))
+
+        questionDao.markAsUsed(listOf(1L))
+        val unused = questionDao.getUnusedQuestions(categoryId = 17, difficulty = "easy", amount = 10)
+
+        assertTrue(unused.isEmpty())
+    }
+
+    @Test
+    fun cascadeDeleteSessionDeletesAnswerRecords() = runBlocking {
+        val sessionDao = db.quizSessionDao()
+        val answerDao = db.answerRecordDao()
+
+        val sessionId = sessionDao.insert(
+            QuizSessionEntity(id = 0L, categoryId = 17, level = 1, startedAt = 1000L, durationMs = 5000L, correctCount = 5, totalCount = 10, stars = 1),
+        )
+
+        val answer = AnswerRecordEntity(id = 0L, sessionId = sessionId, questionText = "Q1", chosenAnswer = "A", correctAnswer = "A", isCorrect = true, answeredAt = 1050L, timeTakenMs = 1200L)
+        answerDao.insertAll(listOf(answer))
+
+        assertEquals(1, answerDao.getAnswersForSession(sessionId).size)
+
+        sessionDao.deleteAll()
+
+        assertTrue(answerDao.getAnswersForSession(sessionId).isEmpty())
+    }
+
+    @Test
+    fun getSessionStartTimesReturnsCorrectSessionsInOrder() = runBlocking {
+        val sessionDao = db.quizSessionDao()
+        sessionDao.insert(QuizSessionEntity(id = 0L, categoryId = 17, level = 1, startedAt = 1000L, durationMs = 5000L, correctCount = 0, totalCount = 10, stars = 0))
+        sessionDao.insert(QuizSessionEntity(id = 0L, categoryId = 17, level = 2, startedAt = 2000L, durationMs = 5000L, correctCount = 8, totalCount = 10, stars = 2))
+        sessionDao.insert(QuizSessionEntity(id = 0L, categoryId = 17, level = 3, startedAt = 3000L, durationMs = 5000L, correctCount = 6, totalCount = 10, stars = 1))
+
+        val times = sessionDao.getSessionStartTimes().first()
+
+        assertEquals(listOf(3000L, 2000L), times)
+    }
+
+    @Test
+    fun deleteOlderThanRemovesExpiredAnswerRecords() = runBlocking {
+        val sessionDao = db.quizSessionDao()
+        val answerDao = db.answerRecordDao()
+
+        val sessionId = sessionDao.insert(QuizSessionEntity(id = 0L, categoryId = 17, level = 1, startedAt = 1000L, durationMs = 5000L, correctCount = 5, totalCount = 10, stars = 1))
+
+        val oldRecord = AnswerRecordEntity(id = 0L, sessionId = sessionId, questionText = "Old Q", chosenAnswer = "A", correctAnswer = "A", isCorrect = true, answeredAt = 1000L, timeTakenMs = 1000L)
+        val newRecord = AnswerRecordEntity(id = 0L, sessionId = sessionId, questionText = "New Q", chosenAnswer = "A", correctAnswer = "A", isCorrect = true, answeredAt = 5000L, timeTakenMs = 1000L)
+        answerDao.insertAll(listOf(oldRecord, newRecord))
+
+        val deletedCount = answerDao.deleteOlderThan(cutoffMillis = 3000L)
+
+        assertEquals(1, deletedCount)
+        val remaining = answerDao.getAnswersForSession(sessionId)
+        assertEquals(1, remaining.size)
+        assertEquals("New Q", remaining[0].questionText)
+    }
+
+    @Test
+    fun dueReviewCardsOrderedByNextReviewAt() = runBlocking {
+        val reviewCardDao = db.reviewCardDao()
+
+        val dueCard1 = ReviewCardEntity(id = 0L, questionText = "Q1", correctAnswer = "A", box = 1, nextReviewAt = 1000L, timesWrong = 1, createdAt = 500L)
+        val dueCard2 = ReviewCardEntity(id = 0L, questionText = "Q2", correctAnswer = "A", box = 2, nextReviewAt = 2000L, timesWrong = 1, createdAt = 500L)
+        val futureCard = ReviewCardEntity(id = 0L, questionText = "Q3", correctAnswer = "A", box = 1, nextReviewAt = 10000L, timesWrong = 1, createdAt = 500L)
+        reviewCardDao.insert(dueCard2)
+        reviewCardDao.insert(dueCard1)
+        reviewCardDao.insert(futureCard)
+
+        val dueCards = reviewCardDao.getDueReviewCards(nowMillis = 5000L).first()
+
+        assertEquals(2, dueCards.size)
+        assertEquals("Q1", dueCards[0].questionText)
+        assertEquals("Q2", dueCards[1].questionText)
+    }
+
+    @Test
+    fun insertAndUpdateSettings() = runBlocking {
         val settingsDao = db.settingsDao()
         val settings = SettingsEntity(
             id = 0,
@@ -90,6 +188,14 @@ class QuizDatabaseTest {
         assertNotNull(loaded)
         assertEquals(10, loaded?.questionsPerLevel)
         assertEquals("DAYS_90", loaded?.answerRetention)
+
+        val updated = settings.copy(questionsPerLevel = 15, timerMode = "CHALLENGE")
+        settingsDao.insertOrUpdate(updated)
+
+        val reloaded = settingsDao.getSettings().first()
+        assertNotNull(reloaded)
+        assertEquals(15, reloaded?.questionsPerLevel)
+        assertEquals("CHALLENGE", reloaded?.timerMode)
     }
 
     @Test
@@ -102,61 +208,5 @@ class QuizDatabaseTest {
 
         assertNotNull(loaded)
         assertEquals(3, loaded?.stars)
-    }
-
-    @Test
-    fun insertAndGetQuizSessionWithAnswers() = runBlocking {
-        val sessionDao = db.quizSessionDao()
-        val answerDao = db.answerRecordDao()
-
-        val session = QuizSessionEntity(
-            id = 0L,
-            categoryId = 17,
-            level = 1,
-            startedAt = 4000L,
-            durationMs = 30000L,
-            correctCount = 8,
-            totalCount = 10,
-            stars = 2,
-        )
-        val sessionId = sessionDao.insert(session)
-
-        val answers = listOf(
-            AnswerRecordEntity(
-                id = 0L,
-                sessionId = sessionId,
-                questionText = "Q1",
-                chosenAnswer = "A1",
-                correctAnswer = "A1",
-                isCorrect = true,
-                answeredAt = 4010L,
-                timeTakenMs = 2000L,
-            ),
-        )
-        answerDao.insertAll(answers)
-
-        val loadedAnswers = answerDao.getAnswersForSession(sessionId)
-        assertEquals(1, loadedAnswers.size)
-        assertTrue(loadedAnswers[0].isCorrect)
-    }
-
-    @Test
-    fun insertAndGetReviewCard() = runBlocking {
-        val cardDao = db.reviewCardDao()
-        val card = ReviewCardEntity(
-            id = 0L,
-            questionText = "Wrong Q",
-            correctAnswer = "Correct A",
-            box = 1,
-            nextReviewAt = 5000L,
-            timesWrong = 1,
-            createdAt = 4500L,
-        )
-
-        cardDao.insert(card)
-        val loaded = cardDao.getDueReviewCards(nowMillis = 6000L).first()
-
-        assertEquals(1, loaded.size)
-        assertEquals("Wrong Q", loaded[0].questionText)
     }
 }
