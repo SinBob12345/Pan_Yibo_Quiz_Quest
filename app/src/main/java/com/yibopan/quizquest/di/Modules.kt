@@ -2,12 +2,25 @@ package com.yibopan.quizquest.di
 
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.yibopan.quizquest.data.database.AnswerRecordDao
 import com.yibopan.quizquest.data.database.CategoryDao
 import com.yibopan.quizquest.data.database.FlaggedQuestionDao
+import com.yibopan.quizquest.data.database.LevelProgressDao
 import com.yibopan.quizquest.data.database.QuestionDao
 import com.yibopan.quizquest.data.database.QuizDatabase
+import com.yibopan.quizquest.data.database.QuizSessionDao
+import com.yibopan.quizquest.data.database.ReviewCardDao
+import com.yibopan.quizquest.data.database.SettingsDao
 import com.yibopan.quizquest.data.network.RateLimiter
 import com.yibopan.quizquest.data.network.TriviaAPI
+import com.yibopan.quizquest.data.repository.ProgressRepository
+import com.yibopan.quizquest.data.repository.ProgressRepositoryImpl
+import com.yibopan.quizquest.data.repository.ReviewRepository
+import com.yibopan.quizquest.data.repository.ReviewRepositoryImpl
+import com.yibopan.quizquest.data.repository.SettingsRepository
+import com.yibopan.quizquest.data.repository.SettingsRepositoryImpl
+import com.yibopan.quizquest.data.repository.StatsRepository
+import com.yibopan.quizquest.data.repository.StatsRepositoryImpl
 import com.yibopan.quizquest.data.repository.TriviaRepository
 import com.yibopan.quizquest.data.repository.TriviaRepositoryImpl
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
@@ -92,7 +105,34 @@ val appModules = module {
             get<CoroutineDispatcher>(),
         )
     }
-    // TODO(Stage 4) ProgressRepository, ReviewRepository, StatsRepository, SettingsRepository
+    single<ProgressRepository> {
+        ProgressRepositoryImpl(
+            get<LevelProgressDao>(),
+            get<QuizSessionDao>(),
+            get<AnswerRecordDao>(),
+            get<TimeProvider>(),
+            get<CoroutineDispatcher>(),
+        )
+    }
+    single<ReviewRepository> {
+        ReviewRepositoryImpl(
+            get<ReviewCardDao>(),
+            get<CoroutineDispatcher>(),
+        )
+    }
+    single<StatsRepository> {
+        StatsRepositoryImpl(
+            get<QuizSessionDao>(),
+            get<CategoryDao>(),
+            get<TimeProvider>(),
+        )
+    }
+    single<SettingsRepository> {
+        SettingsRepositoryImpl(
+            get<SettingsDao>(),
+            get<CoroutineDispatcher>(),
+        )
+    }
     // TODO(Stage 7) PrivacyRepository
 
     // ----- Lecture 4: ViewModels (add get() for each new constructor dependency) -----
