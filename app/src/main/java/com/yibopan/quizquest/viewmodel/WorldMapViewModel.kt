@@ -1,32 +1,82 @@
 package com.yibopan.quizquest.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.yibopan.quizquest.data.model.Difficulty
+import androidx.lifecycle.viewModelScope
 import com.yibopan.quizquest.data.model.SampleData
+import com.yibopan.quizquest.data.repository.ProgressRepository
+import com.yibopan.quizquest.data.repository.TriviaRepository
+import com.yibopan.quizquest.data.rules.LevelPolicy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 
 /**
- * Stage 1: placeholder — all 9 levels unlocked, no stars, EASY.
+ * ViewModel for the World map screen (Lecture 4).
  *
- * Stage 5A: inject ProgressRepository + TriviaRepository; collect getLevelProgress(categoryId)
- * and build the 9 LevelItems with LevelPolicy.difficultyFor / LevelPolicy.isUnlocked.
+ * Collects categories and stored level progress to build the 9 level map tiles,
+ * using [LevelPolicy] for difficulties and level unlocking.
  */
-class WorldMapViewModel(categoryId: Int) : ViewModel() {
+class WorldMapViewModel(
+    private val categoryId: Int,
+    private val progressRepository: ProgressRepository,
+    private val triviaRepository: TriviaRepository,
+) : ViewModel() {
 
-    // Lecture 7: private MutableStateFlow + public read-only StateFlow.
     private val _uiState = MutableStateFlow(
         WorldMapUIState(
             categoryId = categoryId,
             worldName = SampleData.worldName(categoryId),
-            levels = (1..PLACEHOLDER_LEVELS).map { level ->
-                LevelItem(level = level, difficulty = Difficulty.EASY, stars = 0, unlocked = true)
-            },
+            isLoading = true,
         ),
     )
     val uiState: StateFlow<WorldMapUIState> get() = _uiState
 
-    private companion object {
-        const val PLACEHOLDER_LEVELS = 9
+    init {
+        loadWorldMap()
+    }
+
+    private fun loadWorldMap() {
+        viewModelScope.launch {
+            combine(
+                triviaRepository.getCategories(),
+                progressRepository.getLevelProgress(categoryId),
+            ) { categories, progressList ->
+                val categoryName = categories.find { it.id == categoryId }?.name
+                    ?: SampleData.worldName(categoryId)
+
+                val progressByLevel = progressList.associateBy { it.level }
+
+                val levelItems = mutableListOf<LevelItem>()
+                var previousStars: Int? = null
+
+                for (level in 1..LevelPolicy.LEVELS_PER_WORLD) {
+                    val difficulty = LevelPolicy.difficultyFor(level)
+                    val isUnlocked = LevelPolicy.isUnlocked(level, previousStars)
+                    val progress = progressByLevel[level]
+                    val stars = progress?.stars ?: 0
+
+                    levelItems.add(
+                        LevelItem(
+                            level = level,
+                            difficulty = difficulty,
+                            stars = stars,
+                            unlocked = isUnlocked,
+                        ),
+                    )
+
+                    previousStars = progress?.stars
+                }
+
+                WorldMapUIState(
+                    categoryId = categoryId,
+                    worldName = categoryName,
+                    isLoading = false,
+                    levels = levelItems,
+                )
+            }.collect { newState ->
+                _uiState.value = newState
+            }
+        }
     }
 }

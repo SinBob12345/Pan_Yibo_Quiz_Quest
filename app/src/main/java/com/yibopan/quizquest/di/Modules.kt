@@ -137,7 +137,13 @@ val appModules = module {
 
     // ----- Lecture 4: ViewModels (add get() for each new constructor dependency) -----
     viewModel { HomeViewModel() }
-    viewModel { (categoryId: Int) -> WorldMapViewModel(categoryId = categoryId) }
+    viewModel { (categoryId: Int) ->
+        WorldMapViewModel(
+            categoryId = categoryId,
+            progressRepository = get(),
+            triviaRepository = get(),
+        )
+    }
     viewModel { (categoryId: Int, level: Int) -> QuizViewModel(categoryId = categoryId, level = level) }
     viewModel { (sessionId: Long, categoryId: Int, level: Int) ->
         ResultViewModel(sessionId = sessionId, categoryId = categoryId, level = level)
