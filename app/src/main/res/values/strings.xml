@@ -53,7 +53,7 @@
     <string name="quiz_feedback_incorrect">Incorrect. Correct answer: %1$s</string>
     <string name="quiz_next_question">Next question</string>
     <string name="quiz_finish_quiz">See results</string>
-    <string name="quiz_leave_dialog_title">Leave quiz?</string>
+    <string name="quiz_leave_dialog_title">Leave this level?</string>
     <string name="quiz_leave_dialog_message">Your progress in this level session will be lost.</string>
     <string name="quiz_leave_dialog_confirm">Leave</string>
     <string name="quiz_leave_dialog_dismiss">Continue</string>

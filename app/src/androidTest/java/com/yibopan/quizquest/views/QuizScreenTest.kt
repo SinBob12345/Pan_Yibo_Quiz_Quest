@@ -11,7 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** UI tests for [QuizScreenContent] verifying questions, options, feedback, and loading states. */
+/** UI tests for [QuizScreenContent] verifying questions, options, feedback, and leave dialog. */
 @RunWith(AndroidJUnit4::class)
 class QuizScreenTest {
 

@@ -1,5 +1,6 @@
 package com.yibopan.quizquest.views
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -99,31 +99,46 @@ fun QuizScreenContent(
 ) {
     var showLeaveDialog by remember { mutableStateOf(false) }
 
+    val isQuizInProgress = uiState.questionNumber > 0 && !uiState.isLoading && uiState.error == null && uiState.finishedSessionId == null
+
+    // Catch system back gesture / back button when a quiz level is in progress
+    BackHandler(enabled = isQuizInProgress) {
+        showLeaveDialog = true
+    }
+
+    // Neutral Leave AlertDialog with equal visual weight buttons (A2 Commitment #5)
     if (showLeaveDialog) {
         AlertDialog(
             onDismissRequest = { showLeaveDialog = false },
             title = { Text(text = stringResource(R.string.quiz_leave_dialog_title)) },
             text = { Text(text = stringResource(R.string.quiz_leave_dialog_message)) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLeaveDialog = false
-                        onBackPressed()
-                    },
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(text = stringResource(R.string.quiz_leave_dialog_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLeaveDialog = false }) {
-                    Text(text = stringResource(R.string.quiz_leave_dialog_dismiss))
+                    OutlinedButton(
+                        onClick = { showLeaveDialog = false },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(R.string.quiz_leave_dialog_dismiss))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            showLeaveDialog = false
+                            onBackPressed()
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(R.string.quiz_leave_dialog_confirm))
+                    }
                 }
             },
         )
     }
 
     val handleBackPress = {
-        if (uiState.questionNumber > 0 && !uiState.isLoading && uiState.error == null && uiState.finishedSessionId == null) {
+        if (isQuizInProgress) {
             showLeaveDialog = true
         } else {
             onBackPressed()
