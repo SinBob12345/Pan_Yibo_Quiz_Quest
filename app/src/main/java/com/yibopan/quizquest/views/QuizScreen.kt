@@ -9,6 +9,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -39,6 +40,14 @@ fun QuizScreen(
 ) {
     val quizViewModel: QuizViewModel = koinViewModel(parameters = { parametersOf(categoryId, level) })
     val quizUIState by quizViewModel.uiState.collectAsStateWithLifecycle()
+
+    val finishedSessionId = quizUIState.finishedSessionId
+    LaunchedEffect(finishedSessionId) {
+        if (finishedSessionId != null) {
+            onQuizFinished(finishedSessionId)
+        }
+    }
+
     QuizScreenContent(
         uiState = quizUIState,
         onBackPressed = onBackPressed,

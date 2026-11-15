@@ -23,6 +23,8 @@ import com.yibopan.quizquest.data.repository.StatsRepository
 import com.yibopan.quizquest.data.repository.StatsRepositoryImpl
 import com.yibopan.quizquest.data.repository.TriviaRepository
 import com.yibopan.quizquest.data.repository.TriviaRepositoryImpl
+import com.yibopan.quizquest.data.rules.AnswerShuffler
+import com.yibopan.quizquest.data.rules.QuizEngine
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
 import com.yibopan.quizquest.viewmodel.HomeViewModel
@@ -57,6 +59,10 @@ val appModules = module {
     // ----- Lecture 5: dispatcher for repositories (injected so tests can replace it) -----
     single<CoroutineDispatcher> { Dispatchers.IO }
     single<TimeProvider> { SystemTimeProvider }
+
+    // ----- Pure game rules -----
+    single { AnswerShuffler() }
+    single { QuizEngine(get()) }
 
     // ----- Lecture 5 + Lecture 8: networking (Stage 2) -----
     single {
@@ -144,7 +150,18 @@ val appModules = module {
             triviaRepository = get(),
         )
     }
-    viewModel { (categoryId: Int, level: Int) -> QuizViewModel(categoryId = categoryId, level = level) }
+    viewModel { (categoryId: Int, level: Int) ->
+        QuizViewModel(
+            categoryId = categoryId,
+            level = level,
+            triviaRepository = get(),
+            progressRepository = get(),
+            reviewRepository = get(),
+            settingsRepository = get(),
+            quizEngine = get(),
+            timeProvider = get(),
+        )
+    }
     viewModel { (sessionId: Long, categoryId: Int, level: Int) ->
         ResultViewModel(sessionId = sessionId, categoryId = categoryId, level = level)
     }
