@@ -163,7 +163,14 @@ val appModules = module {
         )
     }
     viewModel { (sessionId: Long, categoryId: Int, level: Int) ->
-        ResultViewModel(sessionId = sessionId, categoryId = categoryId, level = level)
+        ResultViewModel(
+            sessionId = sessionId,
+            categoryId = categoryId,
+            level = level,
+            progressRepository = get(),
+            settingsRepository = get(),
+            timeProvider = get(),
+        )
     }
     viewModel { ReviewViewModel() }
     viewModel { StatsViewModel() }

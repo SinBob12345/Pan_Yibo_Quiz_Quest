@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -86,6 +88,18 @@ fun ResultScreenContent(
                 starSize = 40.dp,
                 modifier = Modifier.semantics { stateDescription = starsState },
             )
+            if (uiState.isDailyGoalReached) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_done_for_today),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -118,6 +132,7 @@ fun ResultScreenPreview() {
                 totalCount = 10,
                 stars = 2,
                 isNextLevelUnlocked = true,
+                isDailyGoalReached = true,
             ),
             onBackToMapClicked = {},
             onNextLevelClicked = {},
