@@ -1,6 +1,7 @@
 package com.yibopan.quizquest.data.repository
 
 import com.yibopan.quizquest.data.database.CategoryEntity
+import com.yibopan.quizquest.data.database.FlaggedQuestionEntity
 import com.yibopan.quizquest.data.database.QuestionEntity
 import com.yibopan.quizquest.data.model.Difficulty
 import com.yibopan.quizquest.data.network.NetworkResult
@@ -33,8 +34,8 @@ class TriviaRepositoryTest {
     fun setUp() {
         fakeTriviaAPI = FakeTriviaAPI()
         categoryDao = FakeCategoryDao()
-        questionDao = FakeQuestionDao()
         flaggedDao = FakeFlaggedQuestionDao()
+        questionDao = FakeQuestionDao(flaggedDao)
 
         repository = TriviaRepositoryImpl(
             triviaAPI = fakeTriviaAPI,
@@ -109,6 +110,35 @@ class TriviaRepositoryTest {
         val questions = (result as NetworkResult.Success).data
         assertEquals("Offline Question?", questions[0].text)
         assertTrue(questionDao.questions[0].used)
+    }
+
+    @Test
+    fun `loadQuestions filters out reported questions when loading offline questions`() = runTest {
+        fakeTriviaAPI.shouldQuestionsFailNetwork = true
+        questionDao.insertAll(
+            listOf(
+                QuestionEntity(id = 100L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Good Question", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 1000L, used = false),
+                QuestionEntity(id = 101L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Reported Question", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 1000L, used = false),
+            ),
+        )
+        flaggedDao.insert(FlaggedQuestionEntity("Reported Question", 2000L))
+
+        val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 10)
+
+        assertTrue(result is NetworkResult.Success)
+        val questions = (result as NetworkResult.Success).data
+        assertEquals(1, questions.size)
+        assertEquals("Good Question", questions[0].text)
+    }
+
+    @Test
+    fun `loadQuestions returns error when network is offline and Room has no questions`() = runTest {
+        fakeTriviaAPI.shouldQuestionsFailNetwork = true
+
+        val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
+
+        assertTrue(result is NetworkResult.Error)
+        assertEquals("No questions available offline. Please check your internet connection.", (result as NetworkResult.Error).error)
     }
 
     @Test

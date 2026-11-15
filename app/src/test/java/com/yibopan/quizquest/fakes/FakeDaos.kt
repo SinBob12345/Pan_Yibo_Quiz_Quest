@@ -18,6 +18,7 @@ import com.yibopan.quizquest.data.database.SettingsDao
 import com.yibopan.quizquest.data.database.SettingsEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class FakeCategoryDao : CategoryDao {
@@ -34,18 +35,29 @@ class FakeCategoryDao : CategoryDao {
     }
 }
 
-class FakeQuestionDao : QuestionDao {
+class FakeQuestionDao(
+    private val flaggedDao: FakeFlaggedQuestionDao? = null,
+) : QuestionDao {
     val questions = mutableListOf<QuestionEntity>()
     private var nextId = 1L
 
     override suspend fun getUnusedQuestions(categoryId: Int, difficulty: String, amount: Int): List<QuestionEntity> {
-        return questions.filter { it.categoryId == categoryId && it.difficulty == difficulty && !it.used }
-            .take(amount)
+        val flaggedTexts = flaggedDao?.getFlaggedQuestionTexts()?.first() ?: emptyList()
+        return questions.filter {
+            it.categoryId == categoryId &&
+                it.difficulty == difficulty &&
+                !it.used &&
+                it.text !in flaggedTexts
+        }.take(amount)
     }
 
     override suspend fun getQuestions(categoryId: Int, difficulty: String, amount: Int): List<QuestionEntity> {
-        return questions.filter { it.categoryId == categoryId && it.difficulty == difficulty }
-            .take(amount)
+        val flaggedTexts = flaggedDao?.getFlaggedQuestionTexts()?.first() ?: emptyList()
+        return questions.filter {
+            it.categoryId == categoryId &&
+                it.difficulty == difficulty &&
+                it.text !in flaggedTexts
+        }.take(amount)
     }
 
     override suspend fun insertAll(questions: List<QuestionEntity>) {
@@ -142,11 +154,11 @@ class FakeAnswerRecordDao : AnswerRecordDao {
         return answers.filter { it.sessionId == sessionId }
     }
 
-    override suspend fun insertAll(newAnswers: List<AnswerRecordEntity>) {
-        val withIds = newAnswers.map {
+    override suspend fun insertAll(answers: List<AnswerRecordEntity>) {
+        val withIds = answers.map {
             if (it.id == 0L) it.copy(id = nextId++) else it
         }
-        answers.addAll(withIds)
+        this.answers.addAll(withIds)
     }
 
     override suspend fun deleteOlderThan(cutoffMillis: Long): Int {
