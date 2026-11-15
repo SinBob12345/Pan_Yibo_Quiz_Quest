@@ -2,6 +2,9 @@ package com.yibopan.quizquest.di
 
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.yibopan.quizquest.data.database.CategoryDao
+import com.yibopan.quizquest.data.database.FlaggedQuestionDao
+import com.yibopan.quizquest.data.database.QuestionDao
 import com.yibopan.quizquest.data.database.QuizDatabase
 import com.yibopan.quizquest.data.network.RateLimiter
 import com.yibopan.quizquest.data.network.TriviaAPI
@@ -78,7 +81,17 @@ val appModules = module {
     single { get<QuizDatabase>().settingsDao() }
 
     // ----- Lecture 4: repositories (interface -> implementation) -----
-    single<TriviaRepository> { TriviaRepositoryImpl(get<TriviaAPI>(), get<RateLimiter>(), get<CoroutineDispatcher>()) }
+    single<TriviaRepository> {
+        TriviaRepositoryImpl(
+            get<TriviaAPI>(),
+            get<RateLimiter>(),
+            get<CategoryDao>(),
+            get<QuestionDao>(),
+            get<FlaggedQuestionDao>(),
+            get<TimeProvider>(),
+            get<CoroutineDispatcher>(),
+        )
+    }
     // TODO(Stage 4) ProgressRepository, ReviewRepository, StatsRepository, SettingsRepository
     // TODO(Stage 7) PrivacyRepository
 

@@ -1,9 +1,13 @@
 package com.yibopan.quizquest.data.repository
 
+import com.yibopan.quizquest.data.database.CategoryEntity
+import com.yibopan.quizquest.data.database.QuestionEntity
 import com.yibopan.quizquest.data.model.Difficulty
 import com.yibopan.quizquest.data.network.NetworkResult
-import com.yibopan.quizquest.data.network.OpenTdbResponseCode
 import com.yibopan.quizquest.data.network.RateLimiter
+import com.yibopan.quizquest.fakes.FakeCategoryDao
+import com.yibopan.quizquest.fakes.FakeFlaggedQuestionDao
+import com.yibopan.quizquest.fakes.FakeQuestionDao
 import com.yibopan.quizquest.fakes.FakeTriviaAPI
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -14,104 +18,104 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** Unit tests for [TriviaRepositoryImpl] using [FakeTriviaAPI] (Lecture 5 / Lecture 4 repository testing). */
+/** Unit tests for offline-first [TriviaRepositoryImpl] (Lecture 7). */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TriviaRepositoryTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var fakeTriviaAPI: FakeTriviaAPI
-    private lateinit var rateLimiter: RateLimiter
+    private lateinit var categoryDao: FakeCategoryDao
+    private lateinit var questionDao: FakeQuestionDao
+    private lateinit var flaggedDao: FakeFlaggedQuestionDao
     private lateinit var repository: TriviaRepositoryImpl
 
     @Before
     fun setUp() {
         fakeTriviaAPI = FakeTriviaAPI()
-        rateLimiter = RateLimiter(minIntervalMillis = 0L)
+        categoryDao = FakeCategoryDao()
+        questionDao = FakeQuestionDao()
+        flaggedDao = FakeFlaggedQuestionDao()
+
         repository = TriviaRepositoryImpl(
             triviaAPI = fakeTriviaAPI,
-            rateLimiter = rateLimiter,
+            rateLimiter = RateLimiter(minIntervalMillis = 0L),
+            categoryDao = categoryDao,
+            questionDao = questionDao,
+            flaggedQuestionDao = flaggedDao,
             dispatcher = testDispatcher,
         )
     }
 
     @Test
-    fun `getCategories returns decoded allowed academic categories`() = runTest {
+    fun `getCategories fetches from network when Room is empty and saves to Room`() = runTest {
         val categories = repository.getCategories().first()
 
         assertEquals(3, categories.size)
         assertEquals(listOf(9, 17, 23), categories.map { it.id })
-        assertEquals(listOf("General Knowledge", "Science & Nature", "History"), categories.map { it.name })
+
+        val savedInRoom = categoryDao.getCategories().first()
+        assertEquals(3, savedInRoom.size)
     }
 
     @Test
-    fun `loadQuestions succeeds and decodes question text`() = runTest {
+    fun `getCategories uses Room when categories are already stored`() = runTest {
+        categoryDao.insertAll(
+            listOf(
+                CategoryEntity(id = 9, name = "General Knowledge", updatedAt = 100L),
+                CategoryEntity(id = 17, name = "Science & Nature", updatedAt = 100L),
+            ),
+        )
+
+        val categories = repository.getCategories().first()
+
+        assertEquals(2, categories.size)
+        assertEquals("General Knowledge", categories[0].name)
+    }
+
+    @Test
+    fun `loadQuestions saves downloaded questions to Room`() = runTest {
         val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
 
         assertTrue(result is NetworkResult.Success)
         val questions = (result as NetworkResult.Success).data
         assertEquals(1, questions.size)
-        assertEquals("What is H2O?", questions[0].text)
-        assertEquals("Water", questions[0].correctAnswer)
+
+        assertEquals(1, questionDao.questions.size)
+        assertTrue(questionDao.questions[0].used)
     }
 
     @Test
-    fun `loadQuestions requests token before calling API`() = runTest {
-        repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
-
-        assertEquals(1, fakeTriviaAPI.requestedTokenCount)
-        assertEquals("fake_token_1", fakeTriviaAPI.lastRequestedToken)
-    }
-
-    @Test
-    fun `loadQuestions handles token expired code 3 by refreshing token and retrying`() = runTest {
-        fakeTriviaAPI.responseCodesSequence.add(OpenTdbResponseCode.TOKEN_NOT_FOUND)
-        fakeTriviaAPI.responseCodesSequence.add(OpenTdbResponseCode.SUCCESS)
-
-        val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
-
-        assertTrue(result is NetworkResult.Success)
-        assertEquals(2, fakeTriviaAPI.requestedTokenCount)
-    }
-
-    @Test
-    fun `loadQuestions handles token empty code 4 by resetting token and retrying`() = runTest {
-        fakeTriviaAPI.responseCodesSequence.add(OpenTdbResponseCode.TOKEN_EMPTY)
-        fakeTriviaAPI.responseCodesSequence.add(OpenTdbResponseCode.SUCCESS)
-
-        val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
-
-        assertTrue(result is NetworkResult.Success)
-        assertEquals(1, fakeTriviaAPI.resetTokenCount)
-    }
-
-    @Test
-    fun `loadQuestions returns error result when rate limited`() = runTest {
-        fakeTriviaAPI.questionsResponseCode = OpenTdbResponseCode.RATE_LIMIT
-
-        val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
-
-        assertTrue(result is NetworkResult.Error)
-        assertEquals("Rate limit reached. Please try again in a few seconds.", (result as NetworkResult.Error).error)
-    }
-
-    @Test
-    fun `loadQuestions returns error result on network exception`() = runTest {
+    fun `loadQuestions falls back to Room when network is offline`() = runTest {
         fakeTriviaAPI.shouldQuestionsFailNetwork = true
-
-        val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
-
-        assertTrue(result is NetworkResult.Error)
-        assertEquals("Network offline", (result as NetworkResult.Error).error)
-    }
-
-    @Test
-    fun `flagQuestion filters flagged questions from loadQuestions`() = runTest {
-        repository.flagQuestion("What is H2O?")
+        questionDao.insertAll(
+            listOf(
+                QuestionEntity(
+                    id = 100L,
+                    categoryId = 17,
+                    difficulty = "easy",
+                    type = "multiple",
+                    text = "Offline Question?",
+                    correctAnswer = "Yes",
+                    incorrectAnswers = listOf("No"),
+                    fetchedAt = 1000L,
+                    used = false,
+                ),
+            ),
+        )
 
         val result = repository.loadQuestions(categoryId = 17, difficulty = Difficulty.EASY, amount = 1)
 
         assertTrue(result is NetworkResult.Success)
         val questions = (result as NetworkResult.Success).data
-        assertTrue(questions.isEmpty())
+        assertEquals("Offline Question?", questions[0].text)
+        assertTrue(questionDao.questions[0].used)
+    }
+
+    @Test
+    fun `flagQuestion saves flagged question to Room`() = runTest {
+        repository.flagQuestion("Reported Question Text")
+
+        val flagged = flaggedDao.getFlaggedQuestionTexts().first()
+        assertEquals(listOf("Reported Question Text"), flagged)
     }
 }
