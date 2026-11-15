@@ -61,7 +61,6 @@
 
     <!-- Temporary skeleton placeholders: delete each one when its stage is finished. -->
     <string name="dev_home_stage">Real progress, the review count and the daily-goal stopping cue are connected in stage 6.</string>
-    <string name="dev_world_map_stage">Stars and unlocking come from Room and LevelPolicy in stage 5.</string>
     <string name="dev_quiz_stage">Questions from Open Trivia DB, answer feedback, the 50/50 hint and the optional timer arrive in stage 5.</string>
     <string name="dev_result_stage">The real score, stars and saved session arrive in stage 5.</string>
     <string name="dev_review_stage">Flashcard review of wrong answers (Leitner boxes) arrives in stage 6.</string>

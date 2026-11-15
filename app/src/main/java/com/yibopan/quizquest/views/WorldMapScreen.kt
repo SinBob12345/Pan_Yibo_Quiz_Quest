@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -38,7 +37,7 @@ import com.yibopan.quizquest.viewmodel.LevelItem
 import com.yibopan.quizquest.viewmodel.WorldMapUIState
 import com.yibopan.quizquest.viewmodel.WorldMapViewModel
 import com.yibopan.quizquest.views.components.AppTopBar
-import com.yibopan.quizquest.views.components.StageNotice
+import com.yibopan.quizquest.views.components.LoadingState
 import com.yibopan.quizquest.views.components.StarRow
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -76,20 +75,21 @@ fun WorldMapScreenContent(
             )
         },
     ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 104.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                StageNotice(stage = 5, description = stringResource(R.string.dev_world_map_stage))
-            }
-            items(uiState.levels, key = { it.level }) { level ->
-                LevelTile(level = level, onClick = { onLevelClicked(level.level) })
+        if (uiState.isLoading) {
+            LoadingState(modifier = Modifier.padding(paddingValues))
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 104.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(uiState.levels, key = { it.level }) { level ->
+                    LevelTile(level = level, onClick = { onLevelClicked(level.level) })
+                }
             }
         }
     }
