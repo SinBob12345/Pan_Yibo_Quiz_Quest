@@ -28,7 +28,6 @@ import com.yibopan.quizquest.ui.theme.QuizQuestTheme
 import com.yibopan.quizquest.viewmodel.ResultUIState
 import com.yibopan.quizquest.viewmodel.ResultViewModel
 import com.yibopan.quizquest.views.components.AppTopBar
-import com.yibopan.quizquest.views.components.StageNotice
 import com.yibopan.quizquest.views.components.StarRow
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -78,7 +77,6 @@ fun ResultScreenContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            StageNotice(stage = 5, description = stringResource(R.string.dev_result_stage))
             Text(
                 text = stringResource(R.string.result_score, uiState.correctCount, uiState.totalCount),
                 style = MaterialTheme.typography.headlineSmall,

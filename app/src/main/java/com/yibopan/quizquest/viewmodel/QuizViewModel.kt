@@ -61,6 +61,10 @@ class QuizViewModel(
         loadQuestions()
     }
 
+    fun retry() {
+        loadQuestions()
+    }
+
     private fun loadQuestions() {
         viewModelScope.launch {
             userSettings = settingsRepository.getSettings().first()

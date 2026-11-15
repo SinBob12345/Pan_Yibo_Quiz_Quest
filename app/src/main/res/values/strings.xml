@@ -22,6 +22,9 @@
     <string name="click_label_open_world">open this world</string>
     <string name="click_label_review">review your cards</string>
     <string name="click_label_start_level">start this level</string>
+    <string name="click_label_select_answer">select this answer</string>
+    <string name="click_label_use_hint">use 50/50 hint</string>
+    <string name="click_label_next_question">go to next question</string>
     <string name="click_label_open">open</string>
 
     <!-- Home -->
@@ -43,7 +46,18 @@
 
     <!-- Quiz -->
     <string name="quiz_title">Level %1$d</string>
-    <string name="quiz_finish_demo">Finish (demo)</string>
+    <string name="quiz_progress">Question %1$d of %2$d</string>
+    <string name="quiz_hint_fifty_fifty">50/50 (%1$d left)</string>
+    <string name="quiz_seconds_left">%1$d s</string>
+    <string name="quiz_feedback_correct">Correct!</string>
+    <string name="quiz_feedback_incorrect">Incorrect. Correct answer: %1$s</string>
+    <string name="quiz_next_question">Next question</string>
+    <string name="quiz_finish_quiz">See results</string>
+    <string name="quiz_leave_dialog_title">Leave quiz?</string>
+    <string name="quiz_leave_dialog_message">Your progress in this level session will be lost.</string>
+    <string name="quiz_leave_dialog_confirm">Leave</string>
+    <string name="quiz_leave_dialog_dismiss">Continue</string>
+    <string name="quiz_error_friendly">Unable to load questions. Please check your network connection and try again.</string>
 
     <!-- Result -->
     <string name="result_title">Results</string>
@@ -61,8 +75,6 @@
 
     <!-- Temporary skeleton placeholders: delete each one when its stage is finished. -->
     <string name="dev_home_stage">Real progress, the review count and the daily-goal stopping cue are connected in stage 6.</string>
-    <string name="dev_quiz_stage">Questions from Open Trivia DB, answer feedback, the 50/50 hint and the optional timer arrive in stage 5.</string>
-    <string name="dev_result_stage">The real score, stars and saved session arrive in stage 5.</string>
     <string name="dev_review_stage">Flashcard review of wrong answers (Leitner boxes) arrives in stage 6.</string>
     <string name="dev_stats_stage">Statistics from Room arrive in stage 6.</string>
     <string name="dev_settings_stage">Settings saved in Room arrive in stage 6.</string>
