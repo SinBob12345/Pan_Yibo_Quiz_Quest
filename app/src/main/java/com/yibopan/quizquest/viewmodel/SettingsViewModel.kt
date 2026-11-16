@@ -1,18 +1,71 @@
 package com.yibopan.quizquest.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.yibopan.quizquest.data.model.RetentionPeriod
+import com.yibopan.quizquest.data.model.ThemeMode
+import com.yibopan.quizquest.data.model.TimerMode
+import com.yibopan.quizquest.data.model.UserSettings
+import com.yibopan.quizquest.data.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
- * Stage 1: placeholder (default settings).
+ * ViewModel for the Settings screen (Lecture 4 / Lecture 7).
  *
- * Stage 6A: inject SettingsRepository; collect getSettings(); one function per setting that calls
- * updateSettings(current.copy(...)) inside viewModelScope.launch.
+ * Collects preferences from [SettingsRepository] and provides update functions
+ * for questions per level, timer mode, daily goal, sound, reduce motion, theme, and history retention.
  */
-class SettingsViewModel : ViewModel() {
+class SettingsViewModel(
+    private val settingsRepository: SettingsRepository,
+) : ViewModel() {
 
-    // Lecture 7: private MutableStateFlow + public read-only StateFlow.
     private val _uiState = MutableStateFlow(SettingsUIState())
     val uiState: StateFlow<SettingsUIState> get() = _uiState
+
+    init {
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { settings ->
+                _uiState.update { it.copy(settings = settings) }
+            }
+        }
+    }
+
+    fun updateQuestionsPerLevel(count: Int) {
+        updateSettings { it.copy(questionsPerLevel = count) }
+    }
+
+    fun updateTimerMode(mode: TimerMode) {
+        updateSettings { it.copy(timerMode = mode) }
+    }
+
+    fun updateDailyGoal(goal: Int) {
+        updateSettings { it.copy(dailyGoalLevels = goal) }
+    }
+
+    fun updateSoundEnabled(enabled: Boolean) {
+        updateSettings { it.copy(soundEnabled = enabled) }
+    }
+
+    fun updateReduceMotion(reduce: Boolean) {
+        updateSettings { it.copy(reduceMotion = reduce) }
+    }
+
+    fun updateThemeMode(mode: ThemeMode) {
+        updateSettings { it.copy(themeMode = mode) }
+    }
+
+    fun updateAnswerRetention(period: RetentionPeriod) {
+        updateSettings { it.copy(answerRetention = period) }
+    }
+
+    private fun updateSettings(transform: (UserSettings) -> UserSettings) {
+        viewModelScope.launch {
+            val current = _uiState.value.settings
+            val updated = transform(current)
+            settingsRepository.updateSettings(updated)
+        }
+    }
 }

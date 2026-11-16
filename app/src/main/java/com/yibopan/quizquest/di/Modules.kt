@@ -174,6 +174,6 @@ val appModules = module {
     }
     viewModel { ReviewViewModel() }
     viewModel { StatsViewModel() }
-    viewModel { SettingsViewModel() }
+    viewModel { SettingsViewModel(settingsRepository = get()) }
     viewModel { PrivacyViewModel() }
 }

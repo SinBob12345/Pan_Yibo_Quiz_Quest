@@ -69,6 +69,25 @@
     <string name="review_title">Review</string>
     <string name="stats_title">Your progress</string>
     <string name="settings_title">Settings</string>
+    <string name="settings_sound_title">Sound effects</string>
+    <string name="settings_reduce_motion_title">Reduce motion</string>
+    <string name="settings_reduce_motion_desc">Disables UI animations</string>
+    <string name="settings_questions_per_level_title">Questions per level</string>
+    <string name="settings_questions_per_level_desc">%1$d questions</string>
+    <string name="settings_timer_title">Question timer</string>
+    <string name="settings_timer_off">Off</string>
+    <string name="settings_timer_relaxed">Relaxed (30 seconds)</string>
+    <string name="settings_timer_challenge">Challenge (15 seconds)</string>
+    <string name="settings_daily_goal_title">Daily goal</string>
+    <string name="settings_daily_goal_desc">%1$d levels per day</string>
+    <string name="settings_theme_title">App theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light theme</string>
+    <string name="settings_theme_dark">Dark theme</string>
+    <string name="settings_retention_title">Answer history retention</string>
+    <string name="settings_retention_30">30 days</string>
+    <string name="settings_retention_90">90 days</string>
+    <string name="settings_retention_forever">Forever</string>
     <string name="settings_privacy_entry">Privacy &amp; your data</string>
     <string name="settings_privacy_entry_desc">What is stored, export and delete</string>
     <string name="privacy_title">Privacy &amp; your data</string>
@@ -77,6 +96,5 @@
     <string name="dev_home_stage">Real progress, the review count and the daily-goal stopping cue are connected in stage 6.</string>
     <string name="dev_review_stage">Flashcard review of wrong answers (Leitner boxes) arrives in stage 6.</string>
     <string name="dev_stats_stage">Statistics from Room arrive in stage 6.</string>
-    <string name="dev_settings_stage">Settings saved in Room arrive in stage 6.</string>
     <string name="dev_privacy_stage">The plain-language notice, data export and delete arrive in stage 7.</string>
 </resources>
