@@ -28,6 +28,7 @@ import com.yibopan.quizquest.data.rules.QuizEngine
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
 import com.yibopan.quizquest.viewmodel.HomeViewModel
+import com.yibopan.quizquest.viewmodel.MainViewModel
 import com.yibopan.quizquest.viewmodel.PrivacyViewModel
 import com.yibopan.quizquest.viewmodel.QuizViewModel
 import com.yibopan.quizquest.viewmodel.ResultViewModel
@@ -142,6 +143,7 @@ val appModules = module {
     // TODO(Stage 7) PrivacyRepository
 
     // ----- Lecture 4: ViewModels (add get() for each new constructor dependency) -----
+    viewModel { MainViewModel(settingsRepository = get()) }
     viewModel { HomeViewModel() }
     viewModel { (categoryId: Int) ->
         WorldMapViewModel(
