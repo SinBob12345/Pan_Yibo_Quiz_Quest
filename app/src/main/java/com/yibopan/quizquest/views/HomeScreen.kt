@@ -42,7 +42,6 @@ import com.yibopan.quizquest.ui.theme.QuizQuestTheme
 import com.yibopan.quizquest.viewmodel.HomeUIState
 import com.yibopan.quizquest.viewmodel.HomeViewModel
 import com.yibopan.quizquest.views.components.AppTopBar
-import com.yibopan.quizquest.views.components.StageNotice
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -84,7 +83,6 @@ fun HomeScreenContent(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item { StageNotice(stage = 6, description = stringResource(R.string.dev_home_stage)) }
             item { TodayCard(uiState = uiState) }
             if (uiState.isDailyGoalReached) {
                 item { DoneForTodayCard() }

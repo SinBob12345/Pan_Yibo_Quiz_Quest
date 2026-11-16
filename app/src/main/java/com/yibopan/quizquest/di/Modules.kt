@@ -144,7 +144,16 @@ val appModules = module {
 
     // ----- Lecture 4: ViewModels (add get() for each new constructor dependency) -----
     viewModel { MainViewModel(settingsRepository = get()) }
-    viewModel { HomeViewModel() }
+    viewModel {
+        HomeViewModel(
+            triviaRepository = get(),
+            progressRepository = get(),
+            reviewRepository = get(),
+            statsRepository = get(),
+            settingsRepository = get(),
+            timeProvider = get(),
+        )
+    }
     viewModel { (categoryId: Int) ->
         WorldMapViewModel(
             categoryId = categoryId,
