@@ -156,7 +156,13 @@ val appModules = module {
     }
 
     // ----- Lecture 4: ViewModels (add get() for each new constructor dependency) -----
-    viewModel { MainViewModel(settingsRepository = get()) }
+    viewModel {
+        MainViewModel(
+            settingsRepository = get(),
+            privacyRepository = get(),
+            timeProvider = get(),
+        )
+    }
     viewModel {
         HomeViewModel(
             triviaRepository = get(),

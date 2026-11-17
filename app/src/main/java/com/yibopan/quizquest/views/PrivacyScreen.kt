@@ -26,9 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,7 +47,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * "Privacy & your data" screen (A2 commitments #2 and #4; Lecture 9: data safety & user control).
- * Handles JSON data export via system share sheet and data deletion.
+ * Handles JSON data export via system share sheet and neutral data deletion.
  */
 @Composable
 fun PrivacyScreen(onBackPressed: () -> Unit) {
@@ -113,10 +111,11 @@ fun PrivacyScreenContent(
         }
     }
 
+    // Neutral Delete All Data AlertDialog with equal visual weight buttons (A2 Commitment #5)
     if (uiState.showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = onDismissDeleteClicked,
-            title = { Text(text = "Delete all data?") },
+            title = { Text(text = "Delete all my data?") },
             text = { Text(text = "This will permanently delete all your level scores, review flashcards, and settings from this device. This action cannot be undone.") },
             confirmButton = {
                 Row(

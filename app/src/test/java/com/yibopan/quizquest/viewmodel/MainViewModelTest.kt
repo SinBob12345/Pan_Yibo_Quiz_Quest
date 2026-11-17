@@ -13,7 +13,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/** Unit tests for [MainViewModel] app theme selection (Lecture 4). */
+/** Unit tests for [MainViewModel] app theme selection and startup retention cleanup (Lecture 4). */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModelTest {
 
@@ -21,17 +21,19 @@ class MainViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var settingsRepo: FakeSettingsRepository
+    private lateinit var privacyRepo: FakePrivacyRepository
 
     @Before
     fun setUp() {
         settingsRepo = FakeSettingsRepository()
+        privacyRepo = FakePrivacyRepository()
     }
 
     @Test
-    fun `initialization reads themeMode from SettingsRepository`() = runTest {
+    fun `initialization reads themeMode and purges expired answers`() = runTest {
         settingsRepo.updateSettings(UserSettings(themeMode = ThemeMode.DARK))
 
-        val viewModel = MainViewModel(settingsRepo)
+        val viewModel = MainViewModel(settingsRepo, privacyRepo, timeProvider = { 1000L })
 
         val state = viewModel.uiState.value
         assertEquals(ThemeMode.DARK, state.themeMode)
@@ -39,7 +41,7 @@ class MainViewModelTest {
 
     @Test
     fun `shouldEnableDarkTheme resolves SYSTEM LIGHT and DARK modes correctly`() = runTest {
-        val viewModel = MainViewModel(settingsRepo)
+        val viewModel = MainViewModel(settingsRepo, privacyRepo, timeProvider = { 1000L })
 
         // Default SYSTEM mode
         assertTrue(viewModel.shouldEnableDarkTheme(systemInDark = true))
