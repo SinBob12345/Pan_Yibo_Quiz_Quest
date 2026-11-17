@@ -17,6 +17,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,6 +30,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.window.core.layout.WindowSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
 import com.yibopan.quizquest.R
 import com.yibopan.quizquest.data.model.CategoryAccuracy
 import com.yibopan.quizquest.data.model.DailyActivity
@@ -48,14 +51,28 @@ import java.util.Locale
 
 /** User statistics: totals, accuracy per world, last 7 days, recent results. */
 @Composable
-fun StatsScreen() {
+fun StatsScreen(
+    windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass,
+) {
     val statsViewModel: StatsViewModel = koinViewModel()
     val statsUIState by statsViewModel.uiState.collectAsStateWithLifecycle()
-    StatsScreenContent(uiState = statsUIState)
+    StatsScreenContent(
+        uiState = statsUIState,
+        windowSizeClass = windowSizeClass,
+    )
 }
 
+/**
+ * Stateless Stats UI.
+ * Lecture 3: Uses a two-pane layout on tablets/foldables (width != COMPACT).
+ */
 @Composable
-fun StatsScreenContent(uiState: StatsUIState, modifier: Modifier = Modifier) {
+fun StatsScreenContent(
+    uiState: StatsUIState,
+    modifier: Modifier = Modifier,
+    windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass,
+) {
+    val isTwoPane = windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
     val summary = uiState.summary
 
     Scaffold(
@@ -64,7 +81,67 @@ fun StatsScreenContent(uiState: StatsUIState, modifier: Modifier = Modifier) {
     ) { paddingValues ->
         if (uiState.isLoading) {
             LoadingState(modifier = Modifier.padding(paddingValues))
+        } else if (isTwoPane) {
+            // Lecture 3: Two-pane layout for wider screens (summary left, details right)
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                // Left pane: Summary overview & Last 7 Days Activity
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    item { OverviewCard(summary = summary) }
+                    if (summary.last7Days.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.stats_last_7_days_header),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.semantics { heading() },
+                            )
+                        }
+                        item { Last7DaysCard(activities = summary.last7Days) }
+                    }
+                }
+
+                // Right pane: Accuracy per World & Recent Attempts
+                LazyColumn(
+                    modifier = Modifier.weight(1.2f),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    if (summary.byCategory.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.stats_accuracy_header),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.semantics { heading() },
+                            )
+                        }
+                        items(summary.byCategory, key = { it.categoryId }) { item ->
+                            CategoryAccuracyRow(item = item)
+                        }
+                    }
+
+                    if (summary.recentResults.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.stats_recent_results_header),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.semantics { heading() },
+                            )
+                        }
+                        items(summary.recentResults, key = { it.sessionId }) { result ->
+                            RecentResultRow(result = result)
+                        }
+                    }
+                }
+            }
         } else {
+            // Single column layout for compact phone screens
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -72,12 +149,7 @@ fun StatsScreenContent(uiState: StatsUIState, modifier: Modifier = Modifier) {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                // Overview Totals Card
-                item {
-                    OverviewCard(summary = summary)
-                }
-
-                // Accuracy per World Section
+                item { OverviewCard(summary = summary) }
                 if (summary.byCategory.isNotEmpty()) {
                     item {
                         Text(
@@ -90,8 +162,6 @@ fun StatsScreenContent(uiState: StatsUIState, modifier: Modifier = Modifier) {
                         CategoryAccuracyRow(item = item)
                     }
                 }
-
-                // Last 7 Days Activity Section
                 if (summary.last7Days.isNotEmpty()) {
                     item {
                         Text(
@@ -100,12 +170,8 @@ fun StatsScreenContent(uiState: StatsUIState, modifier: Modifier = Modifier) {
                             modifier = Modifier.semantics { heading() },
                         )
                     }
-                    item {
-                        Last7DaysCard(activities = summary.last7Days)
-                    }
+                    item { Last7DaysCard(activities = summary.last7Days) }
                 }
-
-                // Recent Attempts Section
                 if (summary.recentResults.isNotEmpty()) {
                     item {
                         Text(
