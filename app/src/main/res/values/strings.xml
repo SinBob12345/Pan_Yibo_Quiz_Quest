@@ -25,6 +25,9 @@
     <string name="click_label_select_answer">select this answer</string>
     <string name="click_label_use_hint">use 50/50 hint</string>
     <string name="click_label_next_question">go to next question</string>
+    <string name="click_label_show_answer">reveal the answer on this flashcard</string>
+    <string name="click_label_knew_it">mark that you remembered this card</string>
+    <string name="click_label_not_yet">mark that you need to review this card again</string>
     <string name="click_label_open">open</string>
 
     <!-- Home -->
@@ -67,6 +70,14 @@
 
     <!-- Review / Stats / Settings / Privacy -->
     <string name="review_title">Review</string>
+    <string name="review_card_progress">Card %1$d of %2$d</string>
+    <string name="review_box_label">Leitner Box %1$d</string>
+    <string name="review_show_answer">Show answer</string>
+    <string name="review_knew_it">I knew it</string>
+    <string name="review_not_yet">Not yet</string>
+    <string name="review_all_caught_up_title">All caught up!</string>
+    <string name="review_all_caught_up_desc">No cards are due for review right now. Great job!</string>
+
     <string name="stats_title">Your progress</string>
     <string name="stats_overview_title">Overview</string>
     <string name="stats_total_answered">Questions answered: %1$d</string>
@@ -105,7 +116,5 @@
     <string name="privacy_title">Privacy &amp; your data</string>
 
     <!-- Temporary skeleton placeholders: delete each one when its stage is finished. -->
-    <string name="dev_home_stage">Real progress, the review count and the daily-goal stopping cue are connected in stage 6.</string>
-    <string name="dev_review_stage">Flashcard review of wrong answers (Leitner boxes) arrives in stage 6.</string>
     <string name="dev_privacy_stage">The plain-language notice, data export and delete arrive in stage 7.</string>
 </resources>

@@ -183,7 +183,7 @@ val appModules = module {
             timeProvider = get(),
         )
     }
-    viewModel { ReviewViewModel() }
+    viewModel { ReviewViewModel(reviewRepository = get(), timeProvider = get()) }
     viewModel { StatsViewModel(statsRepository = get()) }
     viewModel { SettingsViewModel(settingsRepository = get()) }
     viewModel { PrivacyViewModel() }

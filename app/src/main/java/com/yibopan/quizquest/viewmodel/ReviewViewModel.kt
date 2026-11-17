@@ -1,18 +1,72 @@
 package com.yibopan.quizquest.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.yibopan.quizquest.data.repository.ReviewRepository
+import com.yibopan.quizquest.data.rules.SystemTimeProvider
+import com.yibopan.quizquest.data.rules.TimeProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
- * Stage 1: placeholder (no cards).
+ * ViewModel for the Flashcard Review screen (Lecture 4 / Lecture 7).
  *
- * Stage 6C: inject ReviewRepository + TimeProvider; collect getDueCards(now); showAnswer(),
- * onKnewIt(), onNotYet() call updateCard(...) and move to the next card.
+ * Collects due cards from [ReviewRepository] and handles Leitner box promotions/demotions.
  */
-class ReviewViewModel : ViewModel() {
+class ReviewViewModel(
+    private val reviewRepository: ReviewRepository,
+    private val timeProvider: TimeProvider = SystemTimeProvider,
+) : ViewModel() {
 
-    // Lecture 7: private MutableStateFlow + public read-only StateFlow.
-    private val _uiState = MutableStateFlow(ReviewUIState())
+    private val _uiState = MutableStateFlow(ReviewUIState(isLoading = true))
     val uiState: StateFlow<ReviewUIState> get() = _uiState
+
+    init {
+        loadDueCards()
+    }
+
+    private fun loadDueCards() {
+        viewModelScope.launch {
+            val now = timeProvider.now()
+            reviewRepository.getDueCards(now).collect { cards ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        dueCards = cards,
+                        currentIndex = if (cards.isEmpty()) 0 else it.currentIndex.coerceAtMost(cards.size - 1),
+                        isAnswerRevealed = false,
+                    )
+                }
+            }
+        }
+    }
+
+    fun showAnswer() {
+        if (_uiState.value.currentCard == null) return
+        _uiState.update { it.copy(isAnswerRevealed = true) }
+    }
+
+    fun onKnewIt() {
+        processCardReview(correct = true)
+    }
+
+    fun onNotYet() {
+        processCardReview(correct = false)
+    }
+
+    private fun processCardReview(correct: Boolean) {
+        val current = _uiState.value.currentCard ?: return
+        viewModelScope.launch {
+            val now = timeProvider.now()
+            reviewRepository.updateCard(current, correct = correct, nowMillis = now)
+            _uiState.update {
+                it.copy(
+                    isAnswerRevealed = false,
+                    currentIndex = it.currentIndex + 1,
+                )
+            }
+        }
+    }
 }
