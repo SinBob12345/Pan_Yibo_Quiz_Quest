@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Timer
@@ -22,6 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -82,6 +84,7 @@ fun QuizScreen(
         onBackPressed = onBackPressed,
         onSelectAnswer = { quizViewModel.selectAnswer(it) },
         onFiftyFiftyClicked = { quizViewModel.useFiftyFifty() },
+        onReportQuestionClicked = { quizViewModel.flagCurrentQuestion() },
         onNextClicked = { quizViewModel.nextQuestion() },
         onRetryClicked = { quizViewModel.retry() },
     )
@@ -93,11 +96,13 @@ fun QuizScreenContent(
     onBackPressed: () -> Unit,
     onSelectAnswer: (String) -> Unit,
     onFiftyFiftyClicked: () -> Unit,
-    onNextClicked: () -> Unit,
-    onRetryClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    onReportQuestionClicked: () -> Unit = {},
+    onNextClicked: () -> Unit = {},
+    onRetryClicked: () -> Unit = {},
 ) {
     var showLeaveDialog by remember { mutableStateOf(false) }
+    var showReportDialog by remember { mutableStateOf(false) }
 
     val isQuizInProgress = uiState.questionNumber > 0 && !uiState.isLoading && uiState.error == null && uiState.finishedSessionId == null
 
@@ -137,6 +142,37 @@ fun QuizScreenContent(
         )
     }
 
+    // Neutral Report Question AlertDialog
+    if (showReportDialog) {
+        AlertDialog(
+            onDismissRequest = { showReportDialog = false },
+            title = { Text(text = stringResource(R.string.quiz_report_question_title)) },
+            text = { Text(text = stringResource(R.string.quiz_report_question_message)) },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = { showReportDialog = false },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(R.string.quiz_leave_dialog_dismiss))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            showReportDialog = false
+                            onReportQuestionClicked()
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(R.string.quiz_report_dialog_confirm))
+                    }
+                }
+            },
+        )
+    }
+
     val handleBackPress = {
         if (isQuizInProgress) {
             showLeaveDialog = true
@@ -155,6 +191,16 @@ fun QuizScreenContent(
             AppTopBar(
                 title = stringResource(R.string.quiz_title, uiState.level),
                 onBackPressed = handleBackPress,
+                actions = {
+                    if (isQuizInProgress) {
+                        IconButton(onClick = { showReportDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Flag,
+                                contentDescription = stringResource(R.string.cd_report_question),
+                            )
+                        }
+                    }
+                },
             )
         },
     ) { paddingValues ->
@@ -400,6 +446,7 @@ fun QuizScreenPreview() {
             onBackPressed = {},
             onSelectAnswer = {},
             onFiftyFiftyClicked = {},
+            onReportQuestionClicked = {},
             onNextClicked = {},
             onRetryClicked = {},
         )

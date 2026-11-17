@@ -27,8 +27,7 @@ import kotlinx.coroutines.launch
  * ViewModel for the Quiz screen (Lecture 4 / Lecture 5).
  *
  * Loads questions from [TriviaRepository], manages gameplay state with [QuizEngine],
- * handles optional per-question timers (off by default), and persists session results
- * and review cards upon completion.
+ * handles question reporting, per-question timers, and session saving.
  */
 class QuizViewModel(
     private val categoryId: Int,
@@ -119,6 +118,20 @@ class QuizViewModel(
         if (_uiState.value.isLoading || quizState.isAnswered || quizState.isFinished || quizState.hintsLeft <= 0) return
         quizState = quizEngine.useFiftyFifty(quizState)
         updateUIState()
+    }
+
+    fun flagCurrentQuestion() {
+        val currentQ = quizState.currentQuestion ?: return
+        viewModelScope.launch {
+            triviaRepository.flagQuestion(currentQ.text)
+            if (quizState.isAnswered) {
+                nextQuestion()
+            } else {
+                val timeTaken = timeProvider.now() - questionStartTime
+                quizState = quizEngine.timeUp(quizState, timeTaken)
+                nextQuestion()
+            }
+        }
     }
 
     fun nextQuestion() {

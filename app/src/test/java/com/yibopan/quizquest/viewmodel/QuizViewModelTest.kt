@@ -26,7 +26,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.random.Random
 
-/** Unit tests for [QuizViewModel] including timer and session saving rules (Lecture 5). */
+/** Unit tests for [QuizViewModel] including timer, question reporting, and session saving rules (Lecture 5). */
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuizViewModelTest {
 
@@ -134,6 +134,26 @@ class QuizViewModelTest {
         assertEquals(1, state.hintsLeft)
         assertEquals(2, state.removedOptions.size)
         assertFalse(state.removedOptions.contains("Paris"))
+    }
+
+    @Test
+    fun `flagCurrentQuestion flags question in repository and advances`() = runTest {
+        val viewModel = QuizViewModel(
+            categoryId = 17,
+            level = 1,
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
+            quizEngine = quizEngine,
+            timeProvider = { 1000L },
+        )
+
+        viewModel.flagCurrentQuestion()
+
+        assertEquals(1, triviaRepo.flaggedQuestions.size)
+        assertEquals("Capital of France?", triviaRepo.flaggedQuestions[0])
+        assertEquals(2, viewModel.uiState.value.questionNumber)
     }
 
     @Test
