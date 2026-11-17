@@ -114,4 +114,19 @@
     <string name="settings_privacy_entry">Privacy &amp; your data</string>
     <string name="settings_privacy_entry_desc">What is stored, export and delete</string>
     <string name="privacy_title">Privacy &amp; your data</string>
+
+    <!-- Plain-language Privacy & Data Safety -->
+    <string name="privacy_what_is_stored_title">What is stored</string>
+    <string name="privacy_what_is_stored_desc">Your level scores, star ratings, flashcards, and app preferences are stored locally on this device in Room database.</string>
+    <string name="privacy_never_collected_title">What is never collected</string>
+    <string name="privacy_never_collected_desc">QuizQuest does not collect or transmit personal names, email addresses, advertising IDs, location data, or analytics telemetry.</string>
+    <string name="privacy_opentdb_title">Network requests &amp; OpenTDB</string>
+    <string name="privacy_opentdb_desc">Questions are fetched directly from opentdb.com via HTTPS. OpenTDB servers see standard network HTTP requests including your IP address, but no user identifiers or account data are sent.</string>
+    <string name="privacy_backups_title">Data backups &amp; export</string>
+    <string name="privacy_backups_desc">Your data stays on your device. You can export a JSON copy of all your records anytime or delete them completely.</string>
+    <string name="privacy_attribution_title">Data source &amp; attribution</string>
+    <string name="privacy_attribution_desc">Trivia question content is provided by the Open Trivia Database (opentdb.com) under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).</string>
+    <string name="privacy_feedback_title">Feedback &amp; Support</string>
+    <string name="privacy_feedback_desc">Have questions or suggestions? Send feedback directly to the developers.</string>
+    <string name="privacy_send_feedback">Send feedback</string>
 </resources>

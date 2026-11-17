@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
@@ -36,6 +37,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yibopan.quizquest.R
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
@@ -47,7 +49,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * "Privacy & your data" screen (A2 commitments #2 and #4; Lecture 9: data safety & user control).
- * Handles JSON data export via system share sheet and neutral data deletion.
+ * Displays plain-language data policies, attribution (CC BY-SA 4.0), export, deletion, and email feedback.
  */
 @Composable
 fun PrivacyScreen(onBackPressed: () -> Unit) {
@@ -151,20 +153,32 @@ fun PrivacyScreenContent(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Plain language privacy sections
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text(
-                            text = "Data Safety Notice",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.semantics { heading() },
+                        PrivacySection(
+                            title = stringResource(R.string.privacy_what_is_stored_title),
+                            desc = stringResource(R.string.privacy_what_is_stored_desc),
                         )
-                        Text(
-                            text = "QuizQuest stores all your progress, settings, and review flashcards locally on this device in Room database. No analytics, tracking, or personal data is collected or sent to external servers.",
-                            style = MaterialTheme.typography.bodyMedium,
+                        PrivacySection(
+                            title = stringResource(R.string.privacy_never_collected_title),
+                            desc = stringResource(R.string.privacy_never_collected_desc),
+                        )
+                        PrivacySection(
+                            title = stringResource(R.string.privacy_opentdb_title),
+                            desc = stringResource(R.string.privacy_opentdb_desc),
+                        )
+                        PrivacySection(
+                            title = stringResource(R.string.privacy_backups_title),
+                            desc = stringResource(R.string.privacy_backups_desc),
+                        )
+                        PrivacySection(
+                            title = stringResource(R.string.privacy_attribution_title),
+                            desc = stringResource(R.string.privacy_attribution_desc),
                         )
                     }
                 }
@@ -172,6 +186,7 @@ fun PrivacyScreenContent(
 
             item { HorizontalDivider() }
 
+            // Export My Data Action
             item {
                 ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -196,6 +211,7 @@ fun PrivacyScreenContent(
                 }
             }
 
+            // Delete All Data Action
             item {
                 ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -219,7 +235,68 @@ fun PrivacyScreenContent(
                     }
                 }
             }
+
+            item { HorizontalDivider() }
+
+            // Lecture 9: Send Feedback Email Channel
+            item {
+                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(text = stringResource(R.string.privacy_feedback_title), style = MaterialTheme.typography.titleSmall)
+                            Text(text = stringResource(R.string.privacy_feedback_desc), style = MaterialTheme.typography.bodySmall)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = "mailto:support@quizquest.edu.au".toUri()
+                                    putExtra(Intent.EXTRA_SUBJECT, "QuizQuest Feedback")
+                                }
+                                try {
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {
+                                    val fallback = Intent(Intent.ACTION_SEND).apply {
+                                        type = "message/rfc822"
+                                        putExtra(Intent.EXTRA_EMAIL, arrayOf("support@quizquest.edu.au"))
+                                        putExtra(Intent.EXTRA_SUBJECT, "QuizQuest Feedback")
+                                    }
+                                    try {
+                                        context.startActivity(Intent.createChooser(fallback, "Send email"))
+                                    } catch (_: Exception) { }
+                                }
+                            },
+                        ) {
+                            Icon(imageVector = Icons.Rounded.Email, contentDescription = null)
+                            Text(text = stringResource(R.string.privacy_send_feedback), modifier = Modifier.padding(start = 4.dp))
+                        }
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun PrivacySection(title: String, desc: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.semantics { heading() },
+        )
+        Text(
+            text = desc,
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 
