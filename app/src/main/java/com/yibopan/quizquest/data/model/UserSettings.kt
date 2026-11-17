@@ -1,10 +1,13 @@
 package com.yibopan.quizquest.data.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * Learner preferences, saved in Room (Lecture 7) in Stage 4.
  * The defaults are deliberate ethical choices (A2 commitments): no timer pressure,
  * a modest daily goal, and answer history kept for 90 days only.
  */
+@Serializable
 data class UserSettings(
     val questionsPerLevel: Int = 10,
     val timerMode: TimerMode = TimerMode.OFF,
@@ -16,6 +19,7 @@ data class UserSettings(
 )
 
 /** Optional per-question timer. OFF is the default so learners are not pressured. */
+@Serializable
 enum class TimerMode(val secondsPerQuestion: Int?) {
     OFF(null),
     RELAXED(30),
@@ -23,6 +27,7 @@ enum class TimerMode(val secondsPerQuestion: Int?) {
 }
 
 /** App colour theme. */
+@Serializable
 enum class ThemeMode {
     SYSTEM,
     LIGHT,
@@ -30,6 +35,7 @@ enum class ThemeMode {
 }
 
 /** How long detailed answer records are kept before they are deleted. */
+@Serializable
 enum class RetentionPeriod(val days: Int?) {
     DAYS_30(30),
     DAYS_90(90),

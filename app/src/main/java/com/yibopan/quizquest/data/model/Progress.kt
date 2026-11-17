@@ -1,9 +1,12 @@
 package com.yibopan.quizquest.data.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * Stored progress of one played level. Levels never played have no row.
  * Whether a level is unlocked is NOT stored — it is worked out with LevelPolicy.
  */
+@Serializable
 data class LevelProgress(
     val categoryId: Int,
     val level: Int,
@@ -12,6 +15,7 @@ data class LevelProgress(
 )
 
 /** One answered question inside a quiz session. [chosenAnswer] is null when the timer ran out. */
+@Serializable
 data class AnswerRecord(
     val questionText: String,
     val chosenAnswer: String?,
@@ -21,6 +25,7 @@ data class AnswerRecord(
 )
 
 /** Summary of a finished quiz session (one level attempt). */
+@Serializable
 data class QuizResult(
     val sessionId: Long,
     val categoryId: Int,

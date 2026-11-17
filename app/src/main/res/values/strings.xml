@@ -114,7 +114,4 @@
     <string name="settings_privacy_entry">Privacy &amp; your data</string>
     <string name="settings_privacy_entry_desc">What is stored, export and delete</string>
     <string name="privacy_title">Privacy &amp; your data</string>
-
-    <!-- Temporary skeleton placeholders: delete each one when its stage is finished. -->
-    <string name="dev_privacy_stage">The plain-language notice, data export and delete arrive in stage 7.</string>
 </resources>

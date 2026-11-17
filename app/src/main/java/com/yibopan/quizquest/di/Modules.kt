@@ -13,6 +13,8 @@ import com.yibopan.quizquest.data.database.ReviewCardDao
 import com.yibopan.quizquest.data.database.SettingsDao
 import com.yibopan.quizquest.data.network.RateLimiter
 import com.yibopan.quizquest.data.network.TriviaAPI
+import com.yibopan.quizquest.data.repository.PrivacyRepository
+import com.yibopan.quizquest.data.repository.PrivacyRepositoryImpl
 import com.yibopan.quizquest.data.repository.ProgressRepository
 import com.yibopan.quizquest.data.repository.ProgressRepositoryImpl
 import com.yibopan.quizquest.data.repository.ReviewRepository
@@ -140,7 +142,18 @@ val appModules = module {
             get<CoroutineDispatcher>(),
         )
     }
-    // TODO(Stage 7) PrivacyRepository
+    single<PrivacyRepository> {
+        PrivacyRepositoryImpl(
+            database = get(),
+            settingsDao = get(),
+            levelProgressDao = get(),
+            quizSessionDao = get(),
+            answerRecordDao = get(),
+            reviewCardDao = get(),
+            timeProvider = get(),
+            dispatcher = get(),
+        )
+    }
 
     // ----- Lecture 4: ViewModels (add get() for each new constructor dependency) -----
     viewModel { MainViewModel(settingsRepository = get()) }
@@ -186,5 +199,5 @@ val appModules = module {
     viewModel { ReviewViewModel(reviewRepository = get(), timeProvider = get()) }
     viewModel { StatsViewModel(statsRepository = get()) }
     viewModel { SettingsViewModel(settingsRepository = get()) }
-    viewModel { PrivacyViewModel() }
+    viewModel { PrivacyViewModel(privacyRepository = get()) }
 }
