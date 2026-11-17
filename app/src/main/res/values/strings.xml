@@ -68,6 +68,18 @@
     <!-- Review / Stats / Settings / Privacy -->
     <string name="review_title">Review</string>
     <string name="stats_title">Your progress</string>
+    <string name="stats_overview_title">Overview</string>
+    <string name="stats_total_answered">Questions answered: %1$d</string>
+    <string name="stats_accuracy">Overall accuracy: %1$d%%</string>
+    <string name="stats_total_stars">Total stars earned: %1$d</string>
+    <string name="stats_active_days">Active days this week: %1$d</string>
+    <string name="stats_accuracy_header">Accuracy per world</string>
+    <string name="stats_last_7_days_header">Daily activity (Last 7 days)</string>
+    <string name="stats_recent_results_header">Recent attempts</string>
+    <string name="stats_recent_item_desc">%1$s Level %2$d · %3$d/%4$d correct</string>
+    <string name="stats_accuracy_item_state">%1$s: %2$d%% accuracy (%3$d of %4$d correct)</string>
+    <string name="stats_daily_item_state">%1$s: %2$d questions answered</string>
+
     <string name="settings_title">Settings</string>
     <string name="settings_sound_title">Sound effects</string>
     <string name="settings_reduce_motion_title">Reduce motion</string>
@@ -93,7 +105,7 @@
     <string name="privacy_title">Privacy &amp; your data</string>
 
     <!-- Temporary skeleton placeholders: delete each one when its stage is finished. -->
+    <string name="dev_home_stage">Real progress, the review count and the daily-goal stopping cue are connected in stage 6.</string>
     <string name="dev_review_stage">Flashcard review of wrong answers (Leitner boxes) arrives in stage 6.</string>
-    <string name="dev_stats_stage">Statistics from Room arrive in stage 6.</string>
     <string name="dev_privacy_stage">The plain-language notice, data export and delete arrive in stage 7.</string>
 </resources>
