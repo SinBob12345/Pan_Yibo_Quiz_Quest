@@ -11,6 +11,7 @@ import com.yibopan.quizquest.data.rules.QuizEngine
 import com.yibopan.quizquest.fakes.FakeProgressRepository
 import com.yibopan.quizquest.fakes.FakeReviewRepository
 import com.yibopan.quizquest.fakes.FakeSettingsRepository
+import com.yibopan.quizquest.fakes.FakeSoundPlayer
 import com.yibopan.quizquest.fakes.FakeTriviaRepository
 import com.yibopan.quizquest.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,7 +27,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.random.Random
 
-/** Unit tests for [QuizViewModel] including timer, question reporting, and session saving rules (Lecture 5). */
+/** Unit tests for [QuizViewModel] including timer, question reporting, sound, and session saving rules (Lecture 5). */
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuizViewModelTest {
 
@@ -113,6 +114,33 @@ class QuizViewModelTest {
         val state = viewModel.uiState.value
         assertEquals("Paris", state.selectedAnswer)
         assertEquals("Paris", state.correctAnswer)
+    }
+
+    @Test
+    fun `soundPlayer plays correct or wrong sound when soundEnabled is true`() = runTest {
+        val soundPlayer = FakeSoundPlayer()
+        settingsRepo.updateSettings(UserSettings(soundEnabled = true))
+
+        val viewModel = QuizViewModel(
+            categoryId = 17,
+            level = 1,
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
+            quizEngine = quizEngine,
+            soundPlayer = soundPlayer,
+            timeProvider = { 1000L },
+        )
+
+        viewModel.selectAnswer("Paris")
+        assertEquals(1, soundPlayer.playedCorrectCount)
+        assertEquals(0, soundPlayer.playedWrongCount)
+
+        viewModel.nextQuestion()
+        viewModel.selectAnswer("WrongChoice")
+        assertEquals(1, soundPlayer.playedCorrectCount)
+        assertEquals(1, soundPlayer.playedWrongCount)
     }
 
     @Test

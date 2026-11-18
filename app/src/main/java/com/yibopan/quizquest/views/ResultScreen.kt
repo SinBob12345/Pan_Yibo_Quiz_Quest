@@ -84,6 +84,7 @@ fun ResultScreenContent(
             StarRow(
                 stars = uiState.stars,
                 starSize = 40.dp,
+                reduceMotion = uiState.reduceMotion,
                 modifier = Modifier.semantics { stateDescription = starsState },
             )
             if (uiState.isDailyGoalReached) {

@@ -29,6 +29,8 @@ import com.yibopan.quizquest.data.rules.AnswerShuffler
 import com.yibopan.quizquest.data.rules.QuizEngine
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
+import com.yibopan.quizquest.data.sound.AndroidSoundPlayer
+import com.yibopan.quizquest.data.sound.SoundPlayer
 import com.yibopan.quizquest.viewmodel.HomeViewModel
 import com.yibopan.quizquest.viewmodel.MainViewModel
 import com.yibopan.quizquest.viewmodel.PrivacyViewModel
@@ -62,6 +64,7 @@ val appModules = module {
     // ----- Lecture 5: dispatcher for repositories (injected so tests can replace it) -----
     single<CoroutineDispatcher> { Dispatchers.IO }
     single<TimeProvider> { SystemTimeProvider }
+    single<SoundPlayer> { AndroidSoundPlayer(androidContext()) }
 
     // ----- Pure game rules -----
     single { AnswerShuffler() }
@@ -189,6 +192,7 @@ val appModules = module {
             reviewRepository = get(),
             settingsRepository = get(),
             quizEngine = get(),
+            soundPlayer = get(),
             timeProvider = get(),
         )
     }

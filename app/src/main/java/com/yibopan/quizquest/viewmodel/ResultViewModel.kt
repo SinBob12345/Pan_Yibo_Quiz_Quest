@@ -73,6 +73,7 @@ class ResultViewModel(
                     stars = stars,
                     isNextLevelUnlocked = isNextUnlocked,
                     isDailyGoalReached = goalReached,
+                    reduceMotion = settings.reduceMotion,
                 )
             }.collect { newState ->
                 _uiState.value = newState

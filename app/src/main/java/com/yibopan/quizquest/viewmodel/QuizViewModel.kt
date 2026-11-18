@@ -15,6 +15,7 @@ import com.yibopan.quizquest.data.rules.QuizState
 import com.yibopan.quizquest.data.rules.StarRating
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
+import com.yibopan.quizquest.data.sound.SoundPlayer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,7 @@ import kotlinx.coroutines.launch
  * ViewModel for the Quiz screen (Lecture 4 / Lecture 5).
  *
  * Loads questions from [TriviaRepository], manages gameplay state with [QuizEngine],
- * handles question reporting, per-question timers, and session saving.
+ * handles question reporting, per-question timers, sound effects, and session saving.
  */
 class QuizViewModel(
     private val categoryId: Int,
@@ -37,6 +38,7 @@ class QuizViewModel(
     private val reviewRepository: ReviewRepository,
     private val settingsRepository: SettingsRepository,
     private val quizEngine: QuizEngine,
+    private val soundPlayer: SoundPlayer? = null,
     private val timeProvider: TimeProvider = SystemTimeProvider,
 ) : ViewModel() {
 
@@ -109,8 +111,19 @@ class QuizViewModel(
     fun selectAnswer(answer: String) {
         if (_uiState.value.isLoading || quizState.isAnswered || quizState.isFinished) return
         val timeTaken = timeProvider.now() - questionStartTime
+        val wasCorrectCount = quizState.correctCount
+
         quizState = quizEngine.selectAnswer(quizState, answer, timeTaken)
         stopTimer()
+
+        if (userSettings.soundEnabled && soundPlayer != null) {
+            if (quizState.correctCount > wasCorrectCount) {
+                soundPlayer.playCorrect()
+            } else {
+                soundPlayer.playWrong()
+            }
+        }
+
         updateUIState()
     }
 
@@ -214,6 +227,7 @@ class QuizViewModel(
                 correctAnswer = if (quizState.isAnswered) currentQ?.correctAnswer else null,
                 hintsLeft = quizState.hintsLeft,
                 secondsLeft = if (secondsPerQuestion != null && !quizState.isAnswered) secondsPerQuestion else null,
+                reduceMotion = userSettings.reduceMotion,
             )
         }
     }

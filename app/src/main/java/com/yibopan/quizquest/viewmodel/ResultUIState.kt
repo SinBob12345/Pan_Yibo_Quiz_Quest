@@ -11,4 +11,6 @@ data class ResultUIState(
     val isNextLevelUnlocked: Boolean = false,
     /** When true the screen also shows the "done for today" card. */
     val isDailyGoalReached: Boolean = false,
+    /** When true, star animations appear instantly (A2 Commitment #7). */
+    val reduceMotion: Boolean = false,
 )

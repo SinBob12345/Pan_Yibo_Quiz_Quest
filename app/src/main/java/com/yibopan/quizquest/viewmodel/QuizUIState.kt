@@ -22,4 +22,6 @@ data class QuizUIState(
     val secondsLeft: Int? = null,
     /** Set when the session is saved; the screen then navigates to the Result screen once. */
     val finishedSessionId: Long? = null,
+    /** When true, animations run with zero duration (A2 Commitment #7). */
+    val reduceMotion: Boolean = false,
 )

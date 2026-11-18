@@ -18,6 +18,7 @@ import com.yibopan.quizquest.data.repository.StatsRepository
 import com.yibopan.quizquest.data.repository.TriviaRepository
 import com.yibopan.quizquest.data.rules.LeitnerScheduler
 import com.yibopan.quizquest.data.rules.StarRating
+import com.yibopan.quizquest.data.sound.SoundPlayer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -178,4 +179,22 @@ class FakePrivacyRepository : PrivacyRepository {
     }
 
     override suspend fun deleteExpiredAnswers(nowMillis: Long): Int = deleteExpiredAnswersResult
+}
+
+class FakeSoundPlayer : SoundPlayer {
+    var playedCorrectCount = 0
+    var playedWrongCount = 0
+    var released = false
+
+    override fun playCorrect() {
+        playedCorrectCount++
+    }
+
+    override fun playWrong() {
+        playedWrongCount++
+    }
+
+    override fun release() {
+        released = true
+    }
 }

@@ -1,7 +1,15 @@
 package com.yibopan.quizquest.views
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -60,7 +69,7 @@ import org.koin.core.parameter.parametersOf
  * The main learning activity ("Activity Screen" in the brief).
  *
  * Uses AnimatedVisibility for loading, error, and content states (Lecture 5).
- * Feedback uses icons + text + TalkBack liveRegion (Lecture 3). Friendly error messages with retry (Lecture 9).
+ * Respects reduceMotion for all progress, question, and feedback animations (A2 Commitment #7).
  */
 @Composable
 fun QuizScreen(
@@ -185,6 +194,16 @@ fun QuizScreenContent(
     val selectLabel = stringResource(R.string.click_label_select_answer)
     val nextLabel = stringResource(R.string.click_label_next_question)
 
+    val targetProgress = if (uiState.totalQuestions > 0) {
+        uiState.questionNumber.toFloat() / uiState.totalQuestions.toFloat()
+    } else 0f
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = if (uiState.reduceMotion) snap() else tween(durationMillis = 300),
+        label = "quizProgress",
+    )
+
     Scaffold(
         modifier = modifier.testTag(TestTags.SCREEN_QUIZ),
         topBar = {
@@ -210,12 +229,20 @@ fun QuizScreenContent(
                 .padding(paddingValues),
         ) {
             // Lecture 5: AnimatedVisibility for loading state
-            AnimatedVisibility(visible = uiState.isLoading) {
+            AnimatedVisibility(
+                visible = uiState.isLoading,
+                enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)),
+                exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
+            ) {
                 LoadingState()
             }
 
             // Lecture 5 & Lecture 9: AnimatedVisibility for friendly error state with retry
-            AnimatedVisibility(visible = !uiState.isLoading && uiState.error != null) {
+            AnimatedVisibility(
+                visible = !uiState.isLoading && uiState.error != null,
+                enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)),
+                exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
+            ) {
                 ErrorState(
                     message = stringResource(R.string.quiz_error_friendly),
                     onRetry = onRetryClicked,
@@ -223,7 +250,11 @@ fun QuizScreenContent(
             }
 
             // Lecture 5: AnimatedVisibility for question content state
-            AnimatedVisibility(visible = !uiState.isLoading && uiState.error == null && uiState.totalQuestions > 0) {
+            AnimatedVisibility(
+                visible = !uiState.isLoading && uiState.error == null && uiState.totalQuestions > 0,
+                enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)),
+                exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -231,6 +262,11 @@ fun QuizScreenContent(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    LinearProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
                     // Header Bar: Progress, Timer, 50/50 Hint Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -271,82 +307,100 @@ fun QuizScreenContent(
                         }
                     }
 
-                    // Question Text
-                    Text(
-                        text = uiState.questionText,
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .semantics { heading() },
-                    )
+                    // AnimatedContent between questions
+                    AnimatedContent(
+                        targetState = uiState.questionNumber,
+                        transitionSpec = {
+                            if (uiState.reduceMotion) {
+                                fadeIn(animationSpec = snap()) togetherWith fadeOut(animationSpec = snap())
+                            } else {
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                            }
+                        },
+                        label = "questionContent",
+                    ) { qNum ->
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.testTag("question_$qNum"),
+                        ) {
+                            // Question Text
+                            Text(
+                                text = uiState.questionText,
+                                style = MaterialTheme.typography.headlineSmall,
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .semantics { heading() },
+                            )
 
-                    // Options Buttons List
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        uiState.options.forEach { option ->
-                            if (option !in uiState.removedOptions) {
-                                val isSelected = (uiState.selectedAnswer == option)
-                                val isCorrectOption = (uiState.correctAnswer == option)
-                                val isWrongSelection = (isSelected && uiState.correctAnswer != null && !isCorrectOption)
+                            // Options Buttons List
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                uiState.options.forEach { option ->
+                                    if (option !in uiState.removedOptions) {
+                                        val isSelected = (uiState.selectedAnswer == option)
+                                        val isCorrectOption = (uiState.correctAnswer == option)
+                                        val isWrongSelection = (isSelected && uiState.correctAnswer != null && !isCorrectOption)
 
-                                val containerColor = when {
-                                    uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.primaryContainer
-                                    isWrongSelection -> MaterialTheme.colorScheme.errorContainer
-                                    isSelected -> MaterialTheme.colorScheme.surfaceVariant
-                                    else -> MaterialTheme.colorScheme.surface
-                                }
+                                        val containerColor = when {
+                                            uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.primaryContainer
+                                            isWrongSelection -> MaterialTheme.colorScheme.errorContainer
+                                            isSelected -> MaterialTheme.colorScheme.surfaceVariant
+                                            else -> MaterialTheme.colorScheme.surface
+                                        }
 
-                                Button(
-                                    onClick = { onSelectAnswer(option) },
-                                    enabled = uiState.selectedAnswer == null,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = containerColor,
-                                        contentColor = when {
-                                            uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            isWrongSelection -> MaterialTheme.colorScheme.onErrorContainer
-                                            else -> MaterialTheme.colorScheme.onSurface
-                                        },
-                                        disabledContainerColor = containerColor,
-                                        disabledContentColor = when {
-                                            uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            isWrongSelection -> MaterialTheme.colorScheme.onErrorContainer
-                                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .semantics {
-                                            onClick(label = selectLabel, action = null)
-                                        },
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Text(
-                                            text = option,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            modifier = Modifier.weight(1f),
-                                        )
-
-                                        // Lecture 3: Feedback uses an icon AND text (never colour alone)
-                                        if (uiState.correctAnswer != null) {
-                                            if (isCorrectOption) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.CheckCircle,
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.primary,
+                                        Button(
+                                            onClick = { onSelectAnswer(option) },
+                                            enabled = uiState.selectedAnswer == null,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = containerColor,
+                                                contentColor = when {
+                                                    uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.onPrimaryContainer
+                                                    isWrongSelection -> MaterialTheme.colorScheme.onErrorContainer
+                                                    else -> MaterialTheme.colorScheme.onSurface
+                                                },
+                                                disabledContainerColor = containerColor,
+                                                disabledContentColor = when {
+                                                    uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.onPrimaryContainer
+                                                    isWrongSelection -> MaterialTheme.colorScheme.onErrorContainer
+                                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                },
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .semantics {
+                                                    onClick(label = selectLabel, action = null)
+                                                },
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = option,
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    modifier = Modifier.weight(1f),
                                                 )
-                                            } else if (isWrongSelection) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Close,
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.error,
-                                                )
+
+                                                // Lecture 3: Feedback uses an icon AND text (never colour alone)
+                                                if (uiState.correctAnswer != null) {
+                                                    if (isCorrectOption) {
+                                                        Icon(
+                                                            imageVector = Icons.Rounded.CheckCircle,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.colorScheme.primary,
+                                                        )
+                                                    } else if (isWrongSelection) {
+                                                        Icon(
+                                                            imageVector = Icons.Rounded.Close,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.colorScheme.error,
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -357,68 +411,74 @@ fun QuizScreenContent(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Answer Feedback & Next Question Action
-                    if (uiState.selectedAnswer != null) {
-                        val isUserCorrect = (uiState.selectedAnswer == uiState.correctAnswer)
+                    // Answer Feedback & Next Question Action with short scale/fade
+                    AnimatedVisibility(
+                        visible = uiState.selectedAnswer != null,
+                        enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)) + scaleIn(initialScale = 0.95f, animationSpec = tween(200)),
+                        exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            val isUserCorrect = (uiState.selectedAnswer == uiState.correctAnswer)
 
-                        // Lecture 3: TalkBack announces feedback via liveRegion = Polite
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isUserCorrect) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.errorContainer
-                                },
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .semantics { liveRegion = LiveRegionMode.Polite },
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            // Lecture 3: TalkBack announces feedback via liveRegion = Polite
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isUserCorrect) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.errorContainer
+                                    },
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { liveRegion = LiveRegionMode.Polite },
                             ) {
-                                Icon(
-                                    imageVector = if (isUserCorrect) Icons.Rounded.CheckCircle else Icons.Rounded.Close,
-                                    contentDescription = null,
-                                    tint = if (isUserCorrect) {
-                                        MaterialTheme.colorScheme.onPrimaryContainer
-                                    } else {
-                                        MaterialTheme.colorScheme.onErrorContainer
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = if (isUserCorrect) Icons.Rounded.CheckCircle else Icons.Rounded.Close,
+                                        contentDescription = null,
+                                        tint = if (isUserCorrect) {
+                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.onErrorContainer
+                                        },
+                                    )
+                                    Text(
+                                        text = if (isUserCorrect) {
+                                            stringResource(R.string.quiz_feedback_correct)
+                                        } else {
+                                            stringResource(R.string.quiz_feedback_incorrect, uiState.correctAnswer.orEmpty())
+                                        },
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (isUserCorrect) {
+                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.onErrorContainer
+                                        },
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = onNextClicked,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics {
+                                        onClick(label = nextLabel, action = null)
                                     },
-                                )
+                            ) {
                                 Text(
-                                    text = if (isUserCorrect) {
-                                        stringResource(R.string.quiz_feedback_correct)
+                                    text = if (uiState.questionNumber >= uiState.totalQuestions) {
+                                        stringResource(R.string.quiz_finish_quiz)
                                     } else {
-                                        stringResource(R.string.quiz_feedback_incorrect, uiState.correctAnswer.orEmpty())
-                                    },
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = if (isUserCorrect) {
-                                        MaterialTheme.colorScheme.onPrimaryContainer
-                                    } else {
-                                        MaterialTheme.colorScheme.onErrorContainer
+                                        stringResource(R.string.quiz_next_question)
                                     },
                                 )
                             }
-                        }
-
-                        Button(
-                            onClick = onNextClicked,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .semantics {
-                                    onClick(label = nextLabel, action = null)
-                                },
-                        ) {
-                            Text(
-                                text = if (uiState.questionNumber >= uiState.totalQuestions) {
-                                    stringResource(R.string.quiz_finish_quiz)
-                                } else {
-                                    stringResource(R.string.quiz_next_question)
-                                },
-                            )
                         }
                     }
                 }
