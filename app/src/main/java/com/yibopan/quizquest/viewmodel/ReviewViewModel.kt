@@ -6,6 +6,7 @@ import com.yibopan.quizquest.R
 import com.yibopan.quizquest.data.repository.ReviewRepository
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -24,12 +25,15 @@ class ReviewViewModel(
     private val _uiState = MutableStateFlow(ReviewUIState(isLoading = true))
     val uiState: StateFlow<ReviewUIState> get() = _uiState
 
+    private var collectJob: Job? = null
+
     init {
-        loadDueCards()
+        refresh()
     }
 
-    private fun loadDueCards() {
-        viewModelScope.launch {
+    fun refresh() {
+        collectJob?.cancel()
+        collectJob = viewModelScope.launch {
             val now = timeProvider.now()
             reviewRepository.getDueCards(now).collect { cards ->
                 _uiState.update {

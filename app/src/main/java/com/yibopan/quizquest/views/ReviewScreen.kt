@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yibopan.quizquest.R
 import com.yibopan.quizquest.data.model.ReviewCard
@@ -48,6 +49,12 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ReviewScreen() {
     val reviewViewModel: ReviewViewModel = koinViewModel()
     val reviewUIState by reviewViewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        reviewViewModel.refresh()
+        onPauseOrDispose { }
+    }
+
     ReviewScreenContent(
         uiState = reviewUIState,
         onShowAnswer = { reviewViewModel.showAnswer() },

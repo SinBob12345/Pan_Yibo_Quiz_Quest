@@ -120,4 +120,27 @@ class ReviewViewModelTest {
 
         assertEquals(1, viewModel.uiState.value.reviewedThisSession)
     }
+
+    @Test
+    fun `refresh updates due cards when time advances`() = runTest {
+        var mockTime = now
+        reviewRepo.addWrongAnswers(
+            listOf(AnswerRecord("Tomorrow Q", "B", "A", false, 1000L)),
+            nowMillis = now,
+        )
+
+        // At initial time (now), nextReviewAt is set to now + 1 day, so it is NOT due yet
+        val viewModel = ReviewViewModel(
+            reviewRepository = reviewRepo,
+            timeProvider = { mockTime },
+        )
+
+        assertNull(viewModel.uiState.value.currentCard)
+
+        // Advance time by 1 day and call refresh()
+        mockTime += 86_400_000L + 1000L
+        viewModel.refresh()
+
+        assertEquals("Tomorrow Q", viewModel.uiState.value.currentCard?.questionText)
+    }
 }
