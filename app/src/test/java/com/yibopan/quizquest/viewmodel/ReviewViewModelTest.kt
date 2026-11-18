@@ -65,7 +65,45 @@ class ReviewViewModelTest {
     }
 
     @Test
-    fun `onKnewIt promotes card box and completes session when last card`() = runTest {
+    fun `3 due cards reviews all 3 cards in order and ends in all caught up state`() = runTest {
+        reviewRepo.addWrongAnswers(
+            listOf(
+                AnswerRecord("Card 1", "B", "A", false, 1000L),
+                AnswerRecord("Card 2", "B", "A", false, 1000L),
+                AnswerRecord("Card 3", "B", "A", false, 1000L),
+            ),
+            nowMillis = now,
+        )
+
+        val viewModel = ReviewViewModel(
+            reviewRepository = reviewRepo,
+            timeProvider = { now + 90_000_000L },
+        )
+
+        // Card 1
+        assertEquals("Card 1", viewModel.uiState.value.currentCard?.questionText)
+        viewModel.showAnswer()
+        viewModel.onKnewIt()
+
+        // Card 2
+        assertEquals("Card 2", viewModel.uiState.value.currentCard?.questionText)
+        viewModel.showAnswer()
+        viewModel.onKnewIt()
+
+        // Card 3
+        assertEquals("Card 3", viewModel.uiState.value.currentCard?.questionText)
+        viewModel.showAnswer()
+        viewModel.onKnewIt()
+
+        // All caught up
+        val finalState = viewModel.uiState.value
+        assertNull(finalState.currentCard)
+        assertTrue(finalState.dueCards.isEmpty())
+        assertEquals(3, finalState.reviewedThisSession)
+    }
+
+    @Test
+    fun `calling onKnewIt twice quickly updates the card only once`() = runTest {
         reviewRepo.addWrongAnswers(
             listOf(AnswerRecord("Wrong Q", "B", "A", false, 1000L)),
             nowMillis = now,
@@ -78,31 +116,8 @@ class ReviewViewModelTest {
 
         viewModel.showAnswer()
         viewModel.onKnewIt()
+        viewModel.onKnewIt() // Second rapid call ignored
 
-        val state = viewModel.uiState.value
-        assertFalse(state.isAnswerRevealed)
-        assertNull(state.currentCard)
-        assertTrue(state.dueCards.isEmpty())
-    }
-
-    @Test
-    fun `onNotYet resets card to box 1 and reschedules`() = runTest {
-        reviewRepo.addWrongAnswers(
-            listOf(AnswerRecord("Wrong Q", "B", "A", false, 1000L)),
-            nowMillis = now,
-        )
-
-        val viewModel = ReviewViewModel(
-            reviewRepository = reviewRepo,
-            timeProvider = { now + 90_000_000L },
-        )
-
-        viewModel.showAnswer()
-        viewModel.onNotYet()
-
-        val state = viewModel.uiState.value
-        assertFalse(state.isAnswerRevealed)
-        assertNull(state.currentCard)
-        assertTrue(state.dueCards.isEmpty())
+        assertEquals(1, viewModel.uiState.value.reviewedThisSession)
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
@@ -131,14 +133,22 @@ fun ReviewScreenContent(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    // Header Bar: Progress & Leitner Box Label
+                    if (uiState.errorMessageRes != null) {
+                        Text(
+                            text = stringResource(uiState.errorMessageRes),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    // Header Bar: Progress (cards left) & Leitner Box Label
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = stringResource(R.string.review_card_progress, uiState.currentIndex + 1, uiState.dueCards.size),
+                            text = pluralStringResource(R.plurals.review_cards_left, uiState.dueCards.size, uiState.dueCards.size),
                             style = MaterialTheme.typography.titleSmall,
                         )
                         Text(
@@ -182,8 +192,10 @@ fun ReviewScreenContent(
                     if (!uiState.isAnswerRevealed) {
                         OutlinedButton(
                             onClick = onShowAnswer,
+                            enabled = !uiState.isUpdating,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .defaultMinSize(minHeight = 48.dp)
                                 .semantics {
                                     onClick(label = showAnswerLabel, action = null)
                                 },
@@ -198,8 +210,10 @@ fun ReviewScreenContent(
                         ) {
                             OutlinedButton(
                                 onClick = onNotYet,
+                                enabled = !uiState.isUpdating,
                                 modifier = Modifier
                                     .weight(1f)
+                                    .defaultMinSize(minHeight = 48.dp)
                                     .semantics {
                                         onClick(label = notYetLabel, action = null)
                                     },
@@ -208,8 +222,10 @@ fun ReviewScreenContent(
                             }
                             OutlinedButton(
                                 onClick = onKnewIt,
+                                enabled = !uiState.isUpdating,
                                 modifier = Modifier
                                     .weight(1f)
+                                    .defaultMinSize(minHeight = 48.dp)
                                     .semantics {
                                         onClick(label = knewItLabel, action = null)
                                     },

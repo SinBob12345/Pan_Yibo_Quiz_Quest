@@ -74,13 +74,17 @@
 
     <!-- Review / Stats / Settings / Privacy -->
     <string name="review_title">Review</string>
-    <string name="review_card_progress">Card %1$d of %2$d</string>
+    <plurals name="review_cards_left">
+        <item quantity="one">%1$d card left</item>
+        <item quantity="other">%1$d cards left</item>
+    </plurals>
     <string name="review_box_label">Leitner Box %1$d</string>
     <string name="review_show_answer">Show answer</string>
     <string name="review_knew_it">I knew it</string>
     <string name="review_not_yet">Not yet</string>
     <string name="review_all_caught_up_title">All caught up!</string>
     <string name="review_all_caught_up_desc">No cards are due for review right now. Great job!</string>
+    <string name="review_error_save_card">Could not save this card. Please try again.</string>
 
     <string name="stats_title">Your progress</string>
     <string name="stats_overview_title">Overview</string>

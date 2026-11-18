@@ -2,6 +2,7 @@ package com.yibopan.quizquest.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yibopan.quizquest.R
 import com.yibopan.quizquest.data.repository.ReviewRepository
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
@@ -35,7 +36,6 @@ class ReviewViewModel(
                     it.copy(
                         isLoading = false,
                         dueCards = cards,
-                        currentIndex = if (cards.isEmpty()) 0 else it.currentIndex.coerceAtMost(cards.size - 1),
                         isAnswerRevealed = false,
                     )
                 }
@@ -44,7 +44,7 @@ class ReviewViewModel(
     }
 
     fun showAnswer() {
-        if (_uiState.value.currentCard == null) return
+        if (_uiState.value.currentCard == null || _uiState.value.isUpdating) return
         _uiState.update { it.copy(isAnswerRevealed = true) }
     }
 
@@ -57,15 +57,30 @@ class ReviewViewModel(
     }
 
     private fun processCardReview(correct: Boolean) {
-        val current = _uiState.value.currentCard ?: return
+        val state = _uiState.value
+        val current = state.currentCard ?: return
+        if (state.isUpdating) return
+
+        _uiState.update { it.copy(isUpdating = true, errorMessageRes = null) }
+
         viewModelScope.launch {
-            val now = timeProvider.now()
-            reviewRepository.updateCard(current, correct = correct, nowMillis = now)
-            _uiState.update {
-                it.copy(
-                    isAnswerRevealed = false,
-                    currentIndex = it.currentIndex + 1,
-                )
+            try {
+                val now = timeProvider.now()
+                reviewRepository.updateCard(current, correct = correct, nowMillis = now)
+                _uiState.update {
+                    it.copy(
+                        isUpdating = false,
+                        isAnswerRevealed = false,
+                        reviewedThisSession = it.reviewedThisSession + 1,
+                    )
+                }
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isUpdating = false,
+                        errorMessageRes = R.string.review_error_save_card,
+                    )
+                }
             }
         }
     }
