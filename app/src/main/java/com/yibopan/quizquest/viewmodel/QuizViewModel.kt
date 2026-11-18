@@ -16,6 +16,7 @@ import com.yibopan.quizquest.data.rules.StarRating
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
 import com.yibopan.quizquest.data.sound.SoundPlayer
+import com.yibopan.quizquest.util.AppLog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,10 @@ class QuizViewModel(
     private val soundPlayer: SoundPlayer? = null,
     private val timeProvider: TimeProvider = SystemTimeProvider,
 ) : ViewModel() {
+
+    private companion object {
+        private const val TAG = "QuizViewModel"
+    }
 
     private val _uiState = MutableStateFlow(
         QuizUIState(
@@ -72,6 +77,8 @@ class QuizViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val difficulty = LevelPolicy.difficultyFor(level)
+            AppLog.d(TAG, "Requesting questions for category $categoryId, level $level ($difficulty)")
+
             val result = triviaRepository.loadQuestions(
                 categoryId = categoryId,
                 difficulty = difficulty,
@@ -82,6 +89,7 @@ class QuizViewModel(
                 is NetworkResult.Success -> {
                     val questions = result.data
                     if (questions.isEmpty()) {
+                        AppLog.d(TAG, "Empty question list returned for level $level")
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -89,6 +97,7 @@ class QuizViewModel(
                             )
                         }
                     } else {
+                        AppLog.d(TAG, "Successfully loaded ${questions.size} questions for level $level")
                         quizState = quizEngine.start(questions)
                         sessionStartTime = timeProvider.now()
                         questionStartTime = sessionStartTime
@@ -97,6 +106,7 @@ class QuizViewModel(
                     }
                 }
                 is NetworkResult.Error -> {
+                    AppLog.d(TAG, "Error loading questions: ${result.error}")
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -129,6 +139,7 @@ class QuizViewModel(
 
     fun useFiftyFifty() {
         if (_uiState.value.isLoading || quizState.isAnswered || quizState.isFinished || quizState.hintsLeft <= 0) return
+        AppLog.d(TAG, "50/50 hint used on question index ${quizState.currentIndex + 1}")
         quizState = quizEngine.useFiftyFifty(quizState)
         updateUIState()
     }
@@ -136,6 +147,7 @@ class QuizViewModel(
     fun flagCurrentQuestion() {
         val currentQ = quizState.currentQuestion ?: return
         viewModelScope.launch {
+            AppLog.d(TAG, "Learner reported question index ${quizState.currentIndex + 1}")
             triviaRepository.flagQuestion(currentQ.text)
             if (quizState.isAnswered) {
                 nextQuestion()
@@ -173,6 +185,7 @@ class QuizViewModel(
                 secondsLeft--
             }
             if (secondsLeft <= 0 && !quizState.isAnswered && !quizState.isFinished) {
+                AppLog.d(TAG, "Timer expired on question index ${quizState.currentIndex + 1}")
                 val timeTaken = timeProvider.now() - questionStartTime
                 quizState = quizEngine.timeUp(quizState, timeTaken)
                 updateUIState()
@@ -206,6 +219,7 @@ class QuizViewModel(
         viewModelScope.launch {
             val sessionId = progressRepository.saveQuizResult(quizResult, quizState.answers)
             reviewRepository.addWrongAnswers(quizState.answers, nowMillis = timeProvider.now())
+            AppLog.d(TAG, "Quiz session saved with ID $sessionId: ${quizState.correctCount}/${quizState.questions.size} correct ($stars stars)")
             _uiState.update { it.copy(finishedSessionId = sessionId) }
         }
     }

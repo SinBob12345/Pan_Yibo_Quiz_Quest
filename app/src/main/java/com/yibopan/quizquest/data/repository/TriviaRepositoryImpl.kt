@@ -19,6 +19,7 @@ import com.yibopan.quizquest.data.network.toQuestion
 import com.yibopan.quizquest.data.rules.CategoryFilter
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
+import com.yibopan.quizquest.util.AppLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -43,11 +44,16 @@ class TriviaRepositoryImpl(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : TriviaRepository {
 
+    private companion object {
+        private const val TAG = "TriviaRepository"
+    }
+
     private var sessionToken: String? = null
 
     override suspend fun getCategories(): Flow<List<Category>> = flow {
         val current = categoryDao.getCategories().first()
         if (current.isEmpty()) {
+            AppLog.d(TAG, "No categories in Room; fetching remote categories")
             fetchRemoteCategories()
         }
         emitAll(categoryDao.getCategories().map { list -> list.map { it.toCategory() } })
@@ -64,10 +70,13 @@ class TriviaRepositoryImpl(
                     val allowed = CategoryFilter.filterAllowed(decoded)
                     val entities = allowed.map { it.toEntity(updatedAt = now) }
                     categoryDao.insertAll(entities)
+                    AppLog.d(TAG, "Successfully fetched and saved ${allowed.size} categories")
                 }
+            } else {
+                AppLog.d(TAG, "Categories HTTP request un-successful: code ${response.code()}")
             }
-        } catch (_: Exception) {
-            // Offline - categories remain in Room
+        } catch (e: Exception) {
+            AppLog.e(TAG, "Offline/Error fetching remote categories", e)
         }
     }
 
@@ -77,6 +86,7 @@ class TriviaRepositoryImpl(
         amount: Int,
     ): NetworkResult<List<Question>> = withContext(dispatcher) {
         val now = timeProvider.now()
+        AppLog.d(TAG, "Loading questions for category $categoryId, difficulty ${difficulty.apiValue}, amount $amount")
         try {
             var token = getOrFetchToken()
             var response = rateLimiter.throttle {
@@ -90,9 +100,11 @@ class TriviaRepositoryImpl(
 
             if (response.isSuccessful && response.body() != null) {
                 var body = response.body()!!
+                AppLog.d(TAG, "OpenTDB API response code: ${body.responseCode}, count: ${body.results.size}")
 
                 // Handle token expiration (3) or depletion (4) with one retry
                 if (body.responseCode == OpenTdbResponseCode.TOKEN_NOT_FOUND) {
+                    AppLog.d(TAG, "Token expired/not found. Fetching new token...")
                     sessionToken = null
                     token = getOrFetchToken()
                     response = rateLimiter.throttle {
@@ -107,6 +119,7 @@ class TriviaRepositoryImpl(
                         body = response.body()!!
                     }
                 } else if (body.responseCode == OpenTdbResponseCode.TOKEN_EMPTY && token != null) {
+                    AppLog.d(TAG, "Token depleted. Resetting token...")
                     token = resetOrNewToken(token)
                     response = rateLimiter.throttle {
                         triviaAPI.fetchQuestions(
@@ -136,15 +149,19 @@ class TriviaRepositoryImpl(
                             questionDao.markAsUsed(idsToMark)
                         }
                         val resultQuestions = storedUnused.map { it.toQuestion() }
+                        AppLog.d(TAG, "Loaded ${resultQuestions.size} questions from Room (after filtering flagged questions)")
                         return@withContext NetworkResult.Success(resultQuestions)
                     }
 
+                    AppLog.d(TAG, "Loaded ${questions.size} network questions directly")
                     return@withContext NetworkResult.Success(questions)
                 }
             }
 
+            AppLog.d(TAG, "Network unsuccessful or empty; attempting Room offline fallback")
             loadOfflineQuestions(categoryId, difficulty, amount)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.e(TAG, "Network exception loading questions; attempting Room offline fallback", e)
             loadOfflineQuestions(categoryId, difficulty, amount)
         }
     }
@@ -167,9 +184,11 @@ class TriviaRepositoryImpl(
                 questionDao.markAsUsed(idsToMark)
             }
             val questions = entities.map { it.toQuestion() }
+            AppLog.d(TAG, "Loaded ${questions.size} offline questions from Room")
             return NetworkResult.Success(questions)
         }
 
+        AppLog.d(TAG, "No questions available in Room for offline fallback")
         return NetworkResult.Error("No questions available offline. Please check your internet connection.")
     }
 
@@ -179,6 +198,7 @@ class TriviaRepositoryImpl(
             flaggedAt = timeProvider.now(),
         )
         flaggedQuestionDao.insert(entity)
+        AppLog.d(TAG, "Flagged question as reported in Room database")
     }
 
     private suspend fun getOrFetchToken(): String? {
@@ -190,11 +210,13 @@ class TriviaRepositoryImpl(
             if (response.isSuccessful && response.body()?.responseCode == OpenTdbResponseCode.SUCCESS) {
                 val newToken = response.body()?.token
                 sessionToken = newToken
+                AppLog.d(TAG, "Successfully requested session token")
                 newToken
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.e(TAG, "Error requesting session token", e)
             null
         }
     }
@@ -205,12 +227,14 @@ class TriviaRepositoryImpl(
             if (resetResponse.isSuccessful && resetResponse.body()?.responseCode == OpenTdbResponseCode.SUCCESS) {
                 val newToken = resetResponse.body()?.token ?: currentToken
                 sessionToken = newToken
+                AppLog.d(TAG, "Successfully reset session token")
                 newToken
             } else {
                 sessionToken = null
                 getOrFetchToken()
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.e(TAG, "Error resetting session token", e)
             sessionToken = null
             getOrFetchToken()
         }
