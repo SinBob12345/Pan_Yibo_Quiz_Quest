@@ -1,15 +1,18 @@
 package com.yibopan.quizquest.views
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -75,30 +78,42 @@ fun HomeScreenContent(
         modifier = modifier.testTag(TestTags.SCREEN_HOME),
         topBar = { AppTopBar(title = stringResource(R.string.app_name)) },
     ) { paddingValues ->
-        // Lecture 2: LazyColumn only composes the items that are visible.
+        // Lecture 2 & 3: Limit content width to 600 dp centered on large screens.
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            item { TodayCard(uiState = uiState) }
-            if (uiState.isDailyGoalReached) {
-                item { DoneForTodayCard() }
-            }
-            item { ReviewShortcutCard(dueCount = uiState.dueReviewCount, onClick = onReviewClicked) }
             item {
-                Text(
-                    text = stringResource(R.string.home_worlds_header),
-                    style = MaterialTheme.typography.titleMedium,
+                Column(
                     modifier = Modifier
-                        .padding(top = 8.dp)
-                        .semantics { heading() },
-                )
+                        .fillMaxWidth()
+                        .widthIn(max = 600.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    TodayCard(uiState = uiState)
+                    if (uiState.isDailyGoalReached) {
+                        DoneForTodayCard()
+                    }
+                    ReviewShortcutCard(dueCount = uiState.dueReviewCount, onClick = onReviewClicked)
+                    Text(
+                        text = stringResource(R.string.home_worlds_header),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .semantics { heading() },
+                    )
+                }
             }
             items(uiState.worlds, key = { it.id }) { world ->
-                WorldListItem(world = world, onClick = { onWorldClicked(world.id) })
+                WorldListItem(
+                    world = world,
+                    onClick = { onWorldClicked(world.id) },
+                    modifier = Modifier.widthIn(max = 600.dp),
+                )
             }
         }
     }
@@ -107,7 +122,11 @@ fun HomeScreenContent(
 @Composable
 private fun TodayCard(uiState: HomeUIState) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .semantics(mergeDescendants = true) {},
+        ) {
             Text(
                 text = stringResource(R.string.home_today_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -140,7 +159,12 @@ private fun DoneForTodayCard() {
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         ),
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .semantics(mergeDescendants = true) {},
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Icon(imageVector = Icons.Rounded.WbSunny, contentDescription = null)
             Spacer(modifier = Modifier.width(12.dp))
             Text(text = stringResource(R.string.home_done_for_today), style = MaterialTheme.typography.bodyLarge)
@@ -150,10 +174,11 @@ private fun DoneForTodayCard() {
 
 @Composable
 private fun ReviewShortcutCard(dueCount: Int, onClick: () -> Unit) {
-    // Lecture 3: label clickable elements so TalkBack says what a tap will do.
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .semantics(mergeDescendants = true) {}
             .clickable(onClickLabel = stringResource(R.string.click_label_review), onClick = onClick),
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -171,10 +196,12 @@ private fun ReviewShortcutCard(dueCount: Int, onClick: () -> Unit) {
 
 /** One world in the list (Lecture 5/6: ElevatedCard + clickable, like PetListItem). */
 @Composable
-private fun WorldListItem(world: Category, onClick: () -> Unit) {
+private fun WorldListItem(world: Category, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ElevatedCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .semantics(mergeDescendants = true) {}
             .clickable(onClickLabel = stringResource(R.string.click_label_open_world), onClick = onClick),
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -190,7 +217,9 @@ private fun WorldListItem(world: Category, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Phone", showBackground = true)
+@Preview(name = "FontScale 200%", fontScale = 2f, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     QuizQuestTheme {

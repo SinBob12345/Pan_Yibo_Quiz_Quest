@@ -1,14 +1,17 @@
 package com.yibopan.quizquest.views
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -78,17 +81,25 @@ fun WorldMapScreenContent(
         if (uiState.isLoading) {
             LoadingState(modifier = Modifier.padding(paddingValues))
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 104.dp),
+            // Lecture 3: Grid content width capped to 600 dp on large displays.
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                items(uiState.levels, key = { it.level }) { level ->
-                    LevelTile(level = level, onClick = { onLevelClicked(level.level) })
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 104.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 600.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(uiState.levels, key = { it.level }) { level ->
+                        LevelTile(level = level, onClick = { onLevelClicked(level.level) })
+                    }
                 }
             }
         }
@@ -97,7 +108,6 @@ fun WorldMapScreenContent(
 
 @Composable
 private fun LevelTile(level: LevelItem, onClick: () -> Unit) {
-    // Lecture 3: describe the state ("Locked" / "2 of 3 stars") and label the click action.
     val state = if (level.unlocked) {
         stringResource(R.string.world_level_stars_state, level.stars)
     } else {
@@ -106,6 +116,7 @@ private fun LevelTile(level: LevelItem, onClick: () -> Unit) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
             .semantics(mergeDescendants = true) { stateDescription = state }
             .clickable(
                 enabled = level.unlocked,
@@ -141,7 +152,9 @@ private fun difficultyLabel(difficulty: Difficulty): String = when (difficulty) 
     Difficulty.HARD -> stringResource(R.string.difficulty_hard)
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Phone", showBackground = true)
+@Preview(name = "FontScale 200%", fontScale = 2f, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun WorldMapScreenPreview() {
     QuizQuestTheme {

@@ -1,13 +1,16 @@
 package com.yibopan.quizquest.views
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -41,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -185,147 +190,154 @@ fun SettingsScreenContent(
         modifier = modifier.testTag(TestTags.SCREEN_SETTINGS),
         topBar = { AppTopBar(title = stringResource(R.string.settings_title)) },
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Sound Effects Switch (Whole row toggleable for TalkBack)
-            item {
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_sound_title)) },
-                    leadingContent = { Icon(imageVector = Icons.AutoMirrored.Rounded.VolumeUp, contentDescription = null) },
-                    trailingContent = {
-                        Switch(checked = settings.soundEnabled, onCheckedChange = null)
-                    },
-                    modifier = Modifier.toggleable(
-                        value = settings.soundEnabled,
-                        onValueChange = onSoundChanged,
-                        role = Role.Switch,
-                    ),
-                )
-            }
-
-            // Reduce Motion Switch (Whole row toggleable for TalkBack)
-            item {
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_reduce_motion_title)) },
-                    supportingContent = { Text(text = stringResource(R.string.settings_reduce_motion_desc)) },
-                    leadingContent = { Icon(imageVector = Icons.Rounded.Animation, contentDescription = null) },
-                    trailingContent = {
-                        Switch(checked = settings.reduceMotion, onCheckedChange = null)
-                    },
-                    modifier = Modifier.toggleable(
-                        value = settings.reduceMotion,
-                        onValueChange = onReduceMotionChanged,
-                        role = Role.Switch,
-                    ),
-                )
-            }
-
-            item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
-
-            // Questions per level
-            item {
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_questions_per_level_title)) },
-                    supportingContent = {
-                        Text(text = stringResource(R.string.settings_questions_per_level_desc, settings.questionsPerLevel))
-                    },
-                    leadingContent = { Icon(imageVector = Icons.Rounded.Quiz, contentDescription = null) },
-                    modifier = Modifier.clickable(
-                        onClickLabel = stringResource(R.string.click_label_open),
-                        onClick = { showQuestionsDialog = true },
-                    ),
-                )
-            }
-
-            // Timer mode
-            item {
-                val timerText = when (settings.timerMode) {
-                    TimerMode.OFF -> stringResource(R.string.settings_timer_off)
-                    TimerMode.RELAXED -> stringResource(R.string.settings_timer_relaxed)
-                    TimerMode.CHALLENGE -> stringResource(R.string.settings_timer_challenge)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 600.dp),
+                contentPadding = PaddingValues(vertical = 8.dp),
+            ) {
+                // Sound Effects Switch (Whole row toggleable for TalkBack)
+                item {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_sound_title)) },
+                        leadingContent = { Icon(imageVector = Icons.AutoMirrored.Rounded.VolumeUp, contentDescription = null) },
+                        trailingContent = {
+                            Switch(checked = settings.soundEnabled, onCheckedChange = null)
+                        },
+                        modifier = Modifier.toggleable(
+                            value = settings.soundEnabled,
+                            onValueChange = onSoundChanged,
+                            role = Role.Switch,
+                        ),
+                    )
                 }
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_timer_title)) },
-                    supportingContent = { Text(text = timerText) },
-                    leadingContent = { Icon(imageVector = Icons.Rounded.Speed, contentDescription = null) },
-                    modifier = Modifier.clickable(
-                        onClickLabel = stringResource(R.string.click_label_open),
-                        onClick = { showTimerDialog = true },
-                    ),
-                )
-            }
 
-            // Daily goal
-            item {
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_daily_goal_title)) },
-                    supportingContent = {
-                        Text(text = stringResource(R.string.settings_daily_goal_desc, settings.dailyGoalLevels))
-                    },
-                    leadingContent = { Icon(imageVector = Icons.Rounded.Category, contentDescription = null) },
-                    modifier = Modifier.clickable(
-                        onClickLabel = stringResource(R.string.click_label_open),
-                        onClick = { showDailyGoalDialog = true },
-                    ),
-                )
-            }
-
-            // App theme
-            item {
-                val themeText = when (settings.themeMode) {
-                    ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
-                    ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
-                    ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
+                // Reduce Motion Switch (Whole row toggleable for TalkBack)
+                item {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_reduce_motion_title)) },
+                        supportingContent = { Text(text = stringResource(R.string.settings_reduce_motion_desc)) },
+                        leadingContent = { Icon(imageVector = Icons.Rounded.Animation, contentDescription = null) },
+                        trailingContent = {
+                            Switch(checked = settings.reduceMotion, onCheckedChange = null)
+                        },
+                        modifier = Modifier.toggleable(
+                            value = settings.reduceMotion,
+                            onValueChange = onReduceMotionChanged,
+                            role = Role.Switch,
+                        ),
+                    )
                 }
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_theme_title)) },
-                    supportingContent = { Text(text = themeText) },
-                    leadingContent = { Icon(imageVector = Icons.Rounded.DarkMode, contentDescription = null) },
-                    modifier = Modifier.clickable(
-                        onClickLabel = stringResource(R.string.click_label_open),
-                        onClick = { showThemeDialog = true },
-                    ),
-                )
-            }
 
-            // Answer retention
-            item {
-                val retentionText = when (settings.answerRetention) {
-                    RetentionPeriod.DAYS_30 -> stringResource(R.string.settings_retention_30)
-                    RetentionPeriod.DAYS_90 -> stringResource(R.string.settings_retention_90)
-                    RetentionPeriod.FOREVER -> stringResource(R.string.settings_retention_forever)
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
+
+                // Questions per level
+                item {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_questions_per_level_title)) },
+                        supportingContent = {
+                            Text(text = stringResource(R.string.settings_questions_per_level_desc, settings.questionsPerLevel))
+                        },
+                        leadingContent = { Icon(imageVector = Icons.Rounded.Quiz, contentDescription = null) },
+                        modifier = Modifier.clickable(
+                            onClickLabel = stringResource(R.string.click_label_open),
+                            onClick = { showQuestionsDialog = true },
+                        ),
+                    )
                 }
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_retention_title)) },
-                    supportingContent = { Text(text = retentionText) },
-                    leadingContent = { Icon(imageVector = Icons.Rounded.History, contentDescription = null) },
-                    modifier = Modifier.clickable(
-                        onClickLabel = stringResource(R.string.click_label_open),
-                        onClick = { showRetentionDialog = true },
-                    ),
-                )
-            }
 
-            item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
+                // Timer mode
+                item {
+                    val timerText = when (settings.timerMode) {
+                        TimerMode.OFF -> stringResource(R.string.settings_timer_off)
+                        TimerMode.RELAXED -> stringResource(R.string.settings_timer_relaxed)
+                        TimerMode.CHALLENGE -> stringResource(R.string.settings_timer_challenge)
+                    }
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_timer_title)) },
+                        supportingContent = { Text(text = timerText) },
+                        leadingContent = { Icon(imageVector = Icons.Rounded.Speed, contentDescription = null) },
+                        modifier = Modifier.clickable(
+                            onClickLabel = stringResource(R.string.click_label_open),
+                            onClick = { showTimerDialog = true },
+                        ),
+                    )
+                }
 
-            // Privacy Entry
-            item {
-                ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.settings_privacy_entry)) },
-                    supportingContent = { Text(text = stringResource(R.string.settings_privacy_entry_desc)) },
-                    leadingContent = { Icon(imageVector = Icons.Rounded.PrivacyTip, contentDescription = null) },
-                    trailingContent = {
-                        Icon(imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
-                    },
-                    modifier = Modifier.clickable(
-                        onClickLabel = stringResource(R.string.click_label_open),
-                        onClick = onPrivacyClicked,
-                    ),
-                )
+                // Daily goal
+                item {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_daily_goal_title)) },
+                        supportingContent = {
+                            Text(text = stringResource(R.string.settings_daily_goal_desc, settings.dailyGoalLevels))
+                        },
+                        leadingContent = { Icon(imageVector = Icons.Rounded.Category, contentDescription = null) },
+                        modifier = Modifier.clickable(
+                            onClickLabel = stringResource(R.string.click_label_open),
+                            onClick = { showDailyGoalDialog = true },
+                        ),
+                    )
+                }
+
+                // App theme
+                item {
+                    val themeText = when (settings.themeMode) {
+                        ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
+                        ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
+                        ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
+                    }
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_theme_title)) },
+                        supportingContent = { Text(text = themeText) },
+                        leadingContent = { Icon(imageVector = Icons.Rounded.DarkMode, contentDescription = null) },
+                        modifier = Modifier.clickable(
+                            onClickLabel = stringResource(R.string.click_label_open),
+                            onClick = { showThemeDialog = true },
+                        ),
+                    )
+                }
+
+                // Answer retention
+                item {
+                    val retentionText = when (settings.answerRetention) {
+                        RetentionPeriod.DAYS_30 -> stringResource(R.string.settings_retention_30)
+                        RetentionPeriod.DAYS_90 -> stringResource(R.string.settings_retention_90)
+                        RetentionPeriod.FOREVER -> stringResource(R.string.settings_retention_forever)
+                    }
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_retention_title)) },
+                        supportingContent = { Text(text = retentionText) },
+                        leadingContent = { Icon(imageVector = Icons.Rounded.History, contentDescription = null) },
+                        modifier = Modifier.clickable(
+                            onClickLabel = stringResource(R.string.click_label_open),
+                            onClick = { showRetentionDialog = true },
+                        ),
+                    )
+                }
+
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp)) }
+
+                // Privacy Entry
+                item {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.settings_privacy_entry)) },
+                        supportingContent = { Text(text = stringResource(R.string.settings_privacy_entry_desc)) },
+                        leadingContent = { Icon(imageVector = Icons.Rounded.PrivacyTip, contentDescription = null) },
+                        trailingContent = {
+                            Icon(imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
+                        },
+                        modifier = Modifier.clickable(
+                            onClickLabel = stringResource(R.string.click_label_open),
+                            onClick = onPrivacyClicked,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -342,7 +354,7 @@ private fun <T> ChoiceDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = title) },
+        title = { Text(text = title, modifier = Modifier.semantics { heading() }) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -352,6 +364,7 @@ private fun <T> ChoiceDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .defaultMinSize(minHeight = 48.dp)
                             .selectable(
                                 selected = (option == selectedOption),
                                 onClick = { onOptionSelected(option) },
@@ -381,7 +394,9 @@ private fun <T> ChoiceDialog(
     )
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Phone", showBackground = true)
+@Preview(name = "FontScale 200%", fontScale = 2f, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
     QuizQuestTheme { SettingsScreenContent(uiState = SettingsUIState(), onPrivacyClicked = {}) }

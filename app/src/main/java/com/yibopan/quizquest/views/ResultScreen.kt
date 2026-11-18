@@ -1,11 +1,15 @@
 package com.yibopan.quizquest.views
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,53 +77,64 @@ fun ResultScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
+                .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = stringResource(R.string.result_score, uiState.correctCount, uiState.totalCount),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-            StarRow(
-                stars = uiState.stars,
-                starSize = 40.dp,
-                reduceMotion = uiState.reduceMotion,
-                modifier = Modifier.semantics { stateDescription = starsState },
-            )
-            if (uiState.isDailyGoalReached) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_done_for_today),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp),
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 600.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                OutlinedButton(onClick = onBackToMapClicked, modifier = Modifier.weight(1f)) {
-                    Text(text = stringResource(R.string.result_back_to_map))
+                Text(
+                    text = stringResource(R.string.result_score, uiState.correctCount, uiState.totalCount),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.semantics { heading() },
+                )
+                StarRow(
+                    stars = uiState.stars,
+                    starSize = 40.dp,
+                    reduceMotion = uiState.reduceMotion,
+                    modifier = Modifier.semantics { stateDescription = starsState },
+                )
+                if (uiState.isDailyGoalReached) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_done_for_today),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
                 }
-                OutlinedButton(
-                    onClick = onNextLevelClicked,
-                    enabled = uiState.isNextLevelUnlocked,
-                    modifier = Modifier.weight(1f),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(text = stringResource(R.string.result_next_level))
+                    OutlinedButton(onClick = onBackToMapClicked, modifier = Modifier.weight(1f)) {
+                        Text(text = stringResource(R.string.result_back_to_map))
+                    }
+                    OutlinedButton(
+                        onClick = onNextLevelClicked,
+                        enabled = uiState.isNextLevelUnlocked,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(R.string.result_next_level))
+                    }
                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Phone", showBackground = true)
+@Preview(name = "FontScale 200%", fontScale = 2f, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun ResultScreenPreview() {
     QuizQuestTheme {

@@ -1,13 +1,16 @@
 package com.yibopan.quizquest.views
 
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteForever
@@ -117,7 +120,7 @@ fun PrivacyScreenContent(
     if (uiState.showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = onDismissDeleteClicked,
-            title = { Text(text = "Delete all my data?") },
+            title = { Text(text = "Delete all my data?", modifier = Modifier.semantics { heading() }) },
             text = { Text(text = "This will permanently delete all your level scores, review flashcards, and settings from this device. This action cannot be undone.") },
             confirmButton = {
                 Row(
@@ -126,13 +129,17 @@ fun PrivacyScreenContent(
                 ) {
                     OutlinedButton(
                         onClick = onDismissDeleteClicked,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
                     ) {
                         Text(text = stringResource(R.string.quiz_leave_dialog_dismiss))
                     }
                     OutlinedButton(
                         onClick = onConfirmDeleteClicked,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
                     ) {
                         Text(text = "Delete")
                     }
@@ -146,137 +153,153 @@ fun PrivacyScreenContent(
         topBar = { AppTopBar(title = stringResource(R.string.privacy_title), onBackPressed = onBackPressed) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Plain language privacy sections
-            item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        PrivacySection(
-                            title = stringResource(R.string.privacy_what_is_stored_title),
-                            desc = stringResource(R.string.privacy_what_is_stored_desc),
-                        )
-                        PrivacySection(
-                            title = stringResource(R.string.privacy_never_collected_title),
-                            desc = stringResource(R.string.privacy_never_collected_desc),
-                        )
-                        PrivacySection(
-                            title = stringResource(R.string.privacy_opentdb_title),
-                            desc = stringResource(R.string.privacy_opentdb_desc),
-                        )
-                        PrivacySection(
-                            title = stringResource(R.string.privacy_backups_title),
-                            desc = stringResource(R.string.privacy_backups_desc),
-                        )
-                        PrivacySection(
-                            title = stringResource(R.string.privacy_attribution_title),
-                            desc = stringResource(R.string.privacy_attribution_desc),
-                        )
-                    }
-                }
-            }
-
-            item { HorizontalDivider() }
-
-            // Export My Data Action
-            item {
-                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 600.dp),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                // Plain language privacy sections
+                item {
+                    Card(modifier = Modifier.fillMaxWidth()) {
                         Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text(text = "Export My Data", style = MaterialTheme.typography.titleSmall)
-                            Text(text = "Share or save a JSON copy of all your scores and flashcards", style = MaterialTheme.typography.bodySmall)
-                        }
-                        OutlinedButton(onClick = onExportClicked, enabled = !uiState.isWorking) {
-                            Icon(imageVector = Icons.Rounded.Download, contentDescription = null)
-                            Text(text = "Export", modifier = Modifier.padding(start = 4.dp))
+                            PrivacySection(
+                                title = stringResource(R.string.privacy_what_is_stored_title),
+                                desc = stringResource(R.string.privacy_what_is_stored_desc),
+                            )
+                            PrivacySection(
+                                title = stringResource(R.string.privacy_never_collected_title),
+                                desc = stringResource(R.string.privacy_never_collected_desc),
+                            )
+                            PrivacySection(
+                                title = stringResource(R.string.privacy_opentdb_title),
+                                desc = stringResource(R.string.privacy_opentdb_desc),
+                            )
+                            PrivacySection(
+                                title = stringResource(R.string.privacy_backups_title),
+                                desc = stringResource(R.string.privacy_backups_desc),
+                            )
+                            PrivacySection(
+                                title = stringResource(R.string.privacy_attribution_title),
+                                desc = stringResource(R.string.privacy_attribution_desc),
+                            )
                         }
                     }
                 }
-            }
 
-            // Delete All Data Action
-            item {
-                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                item { HorizontalDivider() }
+
+                // Export My Data Action
+                item {
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(text = "Delete All Data", style = MaterialTheme.typography.titleSmall)
-                            Text(text = "Permanently clear all database tables on this device", style = MaterialTheme.typography.bodySmall)
-                        }
-                        OutlinedButton(onClick = onRequestDeleteClicked, enabled = !uiState.isWorking) {
-                            Icon(imageVector = Icons.Rounded.DeleteForever, contentDescription = null)
-                            Text(text = "Delete", modifier = Modifier.padding(start = 4.dp))
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Text(text = "Export My Data", style = MaterialTheme.typography.titleSmall)
+                                Text(text = "Share or save a JSON copy of all your scores and flashcards", style = MaterialTheme.typography.bodySmall)
+                            }
+                            OutlinedButton(
+                                onClick = onExportClicked,
+                                enabled = !uiState.isWorking,
+                                modifier = Modifier.defaultMinSize(minHeight = 48.dp),
+                            ) {
+                                Icon(imageVector = Icons.Rounded.Download, contentDescription = null)
+                                Text(text = "Export", modifier = Modifier.padding(start = 4.dp))
+                            }
                         }
                     }
                 }
-            }
 
-            item { HorizontalDivider() }
-
-            // Lecture 9: Send Feedback Email Channel
-            item {
-                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                // Delete All Data Action
+                item {
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(text = stringResource(R.string.privacy_feedback_title), style = MaterialTheme.typography.titleSmall)
-                            Text(text = stringResource(R.string.privacy_feedback_desc), style = MaterialTheme.typography.bodySmall)
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Text(text = "Delete All Data", style = MaterialTheme.typography.titleSmall)
+                                Text(text = "Permanently clear all database tables on this device", style = MaterialTheme.typography.bodySmall)
+                            }
+                            OutlinedButton(
+                                onClick = onRequestDeleteClicked,
+                                enabled = !uiState.isWorking,
+                                modifier = Modifier.defaultMinSize(minHeight = 48.dp),
+                            ) {
+                                Icon(imageVector = Icons.Rounded.DeleteForever, contentDescription = null)
+                                Text(text = "Delete", modifier = Modifier.padding(start = 4.dp))
+                            }
                         }
-                        OutlinedButton(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                    data = "mailto:support@quizquest.edu.au".toUri()
-                                    putExtra(Intent.EXTRA_SUBJECT, "QuizQuest Feedback")
-                                }
-                                try {
-                                    context.startActivity(intent)
-                                } catch (_: Exception) {
-                                    val fallback = Intent(Intent.ACTION_SEND).apply {
-                                        type = "message/rfc822"
-                                        putExtra(Intent.EXTRA_EMAIL, arrayOf("support@quizquest.edu.au"))
+                    }
+                }
+
+                item { HorizontalDivider() }
+
+                // Lecture 9: Send Feedback Email Channel
+                item {
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Text(text = stringResource(R.string.privacy_feedback_title), style = MaterialTheme.typography.titleSmall)
+                                Text(text = stringResource(R.string.privacy_feedback_desc), style = MaterialTheme.typography.bodySmall)
+                            }
+                            OutlinedButton(
+                                modifier = Modifier.defaultMinSize(minHeight = 48.dp),
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                        data = "mailto:support@quizquest.edu.au".toUri()
                                         putExtra(Intent.EXTRA_SUBJECT, "QuizQuest Feedback")
                                     }
                                     try {
-                                        context.startActivity(Intent.createChooser(fallback, "Send email"))
-                                    } catch (_: Exception) { }
-                                }
-                            },
-                        ) {
-                            Icon(imageVector = Icons.Rounded.Email, contentDescription = null)
-                            Text(text = stringResource(R.string.privacy_send_feedback), modifier = Modifier.padding(start = 4.dp))
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        val fallback = Intent(Intent.ACTION_SEND).apply {
+                                            type = "message/rfc822"
+                                            putExtra(Intent.EXTRA_EMAIL, arrayOf("support@quizquest.edu.au"))
+                                            putExtra(Intent.EXTRA_SUBJECT, "QuizQuest Feedback")
+                                        }
+                                        try {
+                                            context.startActivity(Intent.createChooser(fallback, "Send email"))
+                                        } catch (_: Exception) { }
+                                    }
+                                },
+                            ) {
+                                Icon(imageVector = Icons.Rounded.Email, contentDescription = null)
+                                Text(text = stringResource(R.string.privacy_send_feedback), modifier = Modifier.padding(start = 4.dp))
+                            }
                         }
                     }
                 }
@@ -300,7 +323,9 @@ private fun PrivacySection(title: String, desc: String) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Phone", showBackground = true)
+@Preview(name = "FontScale 200%", fontScale = 2f, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun PrivacyScreenPreview() {
     QuizQuestTheme { PrivacyScreenContent(uiState = PrivacyUIState(), onBackPressed = {}) }

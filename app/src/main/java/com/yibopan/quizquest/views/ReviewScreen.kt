@@ -1,5 +1,6 @@
 package com.yibopan.quizquest.views
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
@@ -76,32 +78,41 @@ fun ReviewScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(24.dp),
+                    .padding(paddingValues),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 600.dp)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(
-                            text = stringResource(R.string.review_all_caught_up_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.semantics { heading() },
-                        )
-                        Text(
-                            text = stringResource(R.string.review_all_caught_up_desc),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
+                        Column(
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .semantics(mergeDescendants = true) {},
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.review_all_caught_up_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.semantics { heading() },
+                            )
+                            Text(
+                                text = stringResource(R.string.review_all_caught_up_desc),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
                     }
                 }
             }
@@ -109,95 +120,102 @@ fun ReviewScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(paddingValues),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Header Bar: Progress & Leitner Box Label
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 600.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.review_card_progress, uiState.currentIndex + 1, uiState.dueCards.size),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                    Text(
-                        text = stringResource(R.string.review_box_label, card.box),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-
-                // Flashcard Question Side
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    // Header Bar: Progress & Leitner Box Label
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = card.questionText,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.semantics { heading() },
+                            text = stringResource(R.string.review_card_progress, uiState.currentIndex + 1, uiState.dueCards.size),
+                            style = MaterialTheme.typography.titleSmall,
                         )
+                        Text(
+                            text = stringResource(R.string.review_box_label, card.box),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
 
-                        // Lecture 5: AnimatedVisibility reveals the answer
-                        AnimatedVisibility(visible = uiState.isAnswerRevealed) {
-                            Column {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(
-                                    text = card.correctAnswer,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
+                    // Flashcard Question Side
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                text = card.questionText,
+                                style = MaterialTheme.typography.headlineSmall,
+                                modifier = Modifier.semantics { heading() },
+                            )
+
+                            // Lecture 5: AnimatedVisibility reveals the answer
+                            AnimatedVisibility(visible = uiState.isAnswerRevealed) {
+                                Column {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = card.correctAnswer,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                // Action Controls: "Show answer" or Equal-weight ("Not yet" / "I knew it")
-                if (!uiState.isAnswerRevealed) {
-                    OutlinedButton(
-                        onClick = onShowAnswer,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics {
-                                onClick(label = showAnswerLabel, action = null)
-                            },
-                    ) {
-                        Text(text = stringResource(R.string.review_show_answer))
-                    }
-                } else {
-                    // Equal visual weight buttons (A2 Commitment #5)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    // Action Controls: "Show answer" or Equal-weight ("Not yet" / "I knew it")
+                    if (!uiState.isAnswerRevealed) {
                         OutlinedButton(
-                            onClick = onNotYet,
+                            onClick = onShowAnswer,
                             modifier = Modifier
-                                .weight(1f)
+                                .fillMaxWidth()
                                 .semantics {
-                                    onClick(label = notYetLabel, action = null)
+                                    onClick(label = showAnswerLabel, action = null)
                                 },
                         ) {
-                            Text(text = stringResource(R.string.review_not_yet))
+                            Text(text = stringResource(R.string.review_show_answer))
                         }
-                        OutlinedButton(
-                            onClick = onKnewIt,
-                            modifier = Modifier
-                                .weight(1f)
-                                .semantics {
-                                    onClick(label = knewItLabel, action = null)
-                                },
+                    } else {
+                        // Equal visual weight buttons (A2 Commitment #5)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text(text = stringResource(R.string.review_knew_it))
+                            OutlinedButton(
+                                onClick = onNotYet,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics {
+                                        onClick(label = notYetLabel, action = null)
+                                    },
+                            ) {
+                                Text(text = stringResource(R.string.review_not_yet))
+                            }
+                            OutlinedButton(
+                                onClick = onKnewIt,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics {
+                                        onClick(label = knewItLabel, action = null)
+                                    },
+                            ) {
+                                Text(text = stringResource(R.string.review_knew_it))
+                            }
                         }
                     }
                 }
@@ -206,7 +224,9 @@ fun ReviewScreenContent(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Phone", showBackground = true)
+@Preview(name = "FontScale 200%", fontScale = 2f, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun ReviewScreenPreview() {
     QuizQuestTheme {

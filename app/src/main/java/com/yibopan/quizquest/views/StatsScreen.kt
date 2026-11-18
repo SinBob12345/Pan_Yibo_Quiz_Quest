@@ -1,5 +1,6 @@
 package com.yibopan.quizquest.views
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -194,7 +195,9 @@ private fun OverviewCard(summary: StatsSummary) {
     val accuracyPercent = (summary.overallAccuracy * 100).toInt()
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .padding(16.dp)
+                .semantics(mergeDescendants = true) {},
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
@@ -312,7 +315,11 @@ private fun Last7DaysCard(activities: List<DailyActivity>) {
 @Composable
 private fun RecentResultRow(result: QuizResult) {
     val worldName = SampleData.worldName(result.categoryId).ifBlank { "World ${result.categoryId}" }
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {},
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -331,7 +338,10 @@ private fun RecentResultRow(result: QuizResult) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Phone", showBackground = true)
+@Preview(name = "Tablet", device = "spec:width=1280dp,height=800dp,dpi=240", showBackground = true)
+@Preview(name = "FontScale 200%", fontScale = 2f, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun StatsScreenPreview() {
     QuizQuestTheme { StatsScreenContent(uiState = StatsUIState()) }
