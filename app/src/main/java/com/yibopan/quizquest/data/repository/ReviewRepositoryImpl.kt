@@ -60,18 +60,15 @@ class ReviewRepositoryImpl(
     }
 
     override suspend fun updateCard(card: ReviewCard, correct: Boolean, nowMillis: Long): Unit = withContext(dispatcher) {
+        val entity = reviewCardDao.getById(card.id) ?: return@withContext
         val nextBox = LeitnerScheduler.nextBox(card.box, correct)
         val nextReview = LeitnerScheduler.nextReviewAt(nextBox, nowMillis)
         val timesWrong = if (correct) card.timesWrong else card.timesWrong + 1
 
-        val updatedEntity = ReviewCardEntity(
-            id = card.id,
-            questionText = card.questionText,
-            correctAnswer = card.correctAnswer,
+        val updatedEntity = entity.copy(
             box = nextBox,
             nextReviewAt = nextReview,
             timesWrong = timesWrong,
-            createdAt = nowMillis,
         )
         reviewCardDao.update(updatedEntity)
     }

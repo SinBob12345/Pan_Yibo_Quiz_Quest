@@ -18,6 +18,7 @@ import com.yibopan.quizquest.data.database.SettingsDao
 import com.yibopan.quizquest.data.database.SettingsEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -172,7 +173,9 @@ class FakeAnswerRecordDao : AnswerRecordDao {
     }
 }
 
-class FakeReviewCardDao : ReviewCardDao {
+class FakeReviewCardDao(
+    private val flaggedDao: FakeFlaggedQuestionDao? = null,
+) : ReviewCardDao {
     private val cardsState = MutableStateFlow<List<ReviewCardEntity>>(emptyList())
     private var nextId = 1L
 
@@ -181,13 +184,19 @@ class FakeReviewCardDao : ReviewCardDao {
     }
 
     override fun getDueReviewCards(nowMillis: Long): Flow<List<ReviewCardEntity>> {
-        return cardsState.map { list ->
-            list.filter { it.nextReviewAt <= nowMillis }.sortedBy { it.nextReviewAt }
+        val flaggedFlow = flaggedDao?.getFlaggedQuestionTexts() ?: MutableStateFlow(emptyList())
+        return combine(cardsState, flaggedFlow) { cards, flagged ->
+            cards.filter { it.nextReviewAt <= nowMillis && it.questionText !in flagged }
+                .sortedBy { it.nextReviewAt }
         }
     }
 
     override suspend fun getCardByQuestionText(questionText: String): ReviewCardEntity? {
         return cardsState.value.find { it.questionText == questionText }
+    }
+
+    override suspend fun getById(id: Long): ReviewCardEntity? {
+        return cardsState.value.find { it.id == id }
     }
 
     override suspend fun insert(card: ReviewCardEntity): Long {

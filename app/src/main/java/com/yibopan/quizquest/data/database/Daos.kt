@@ -107,11 +107,14 @@ interface ReviewCardDao {
     @Query("SELECT * FROM ReviewCard ORDER BY nextReviewAt ASC")
     fun getAllReviewCards(): Flow<List<ReviewCardEntity>>
 
-    @Query("SELECT * FROM ReviewCard WHERE nextReviewAt <= :nowMillis ORDER BY nextReviewAt ASC")
+    @Query("SELECT * FROM ReviewCard WHERE nextReviewAt <= :nowMillis AND questionText NOT IN (SELECT questionText FROM FlaggedQuestion) ORDER BY nextReviewAt ASC")
     fun getDueReviewCards(nowMillis: Long): Flow<List<ReviewCardEntity>>
 
     @Query("SELECT * FROM ReviewCard WHERE questionText = :questionText LIMIT 1")
     suspend fun getCardByQuestionText(questionText: String): ReviewCardEntity?
+
+    @Query("SELECT * FROM ReviewCard WHERE id = :id")
+    suspend fun getById(id: Long): ReviewCardEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(card: ReviewCardEntity): Long

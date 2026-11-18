@@ -169,6 +169,24 @@ class QuizDatabaseTest {
     }
 
     @Test
+    fun getDueReviewCardsFiltersOutFlaggedQuestions() = runBlocking {
+        val reviewCardDao = db.reviewCardDao()
+        val flaggedDao = db.flaggedQuestionDao()
+
+        val card1 = ReviewCardEntity(id = 0L, questionText = "Q1 Reported", correctAnswer = "A", box = 1, nextReviewAt = 1000L, timesWrong = 1, createdAt = 500L)
+        val card2 = ReviewCardEntity(id = 0L, questionText = "Q2 Safe", correctAnswer = "A", box = 1, nextReviewAt = 1000L, timesWrong = 1, createdAt = 500L)
+        reviewCardDao.insert(card1)
+        reviewCardDao.insert(card2)
+
+        flaggedDao.insert(FlaggedQuestionEntity(questionText = "Q1 Reported", flaggedAt = 2000L))
+
+        val dueCards = reviewCardDao.getDueReviewCards(nowMillis = 5000L).first()
+
+        assertEquals(1, dueCards.size)
+        assertEquals("Q2 Safe", dueCards[0].questionText)
+    }
+
+    @Test
     fun insertAndUpdateSettings() = runBlocking {
         val settingsDao = db.settingsDao()
         val settings = SettingsEntity(

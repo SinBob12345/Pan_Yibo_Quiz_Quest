@@ -71,4 +71,18 @@ class ReviewRepositoryTest {
         assertEquals(1, dueCards[0].box)
         assertEquals(2, dueCards[0].timesWrong)
     }
+
+    @Test
+    fun `updateCard keeps original createdAt`() = runTest {
+        val initialCreatedAt = 500_000_000L
+        reviewCardDao.insert(ReviewCardEntity(1L, "Q1", "A", 1, now, 1, initialCreatedAt))
+
+        val card = ReviewCard(id = 1L, questionText = "Q1", correctAnswer = "A", box = 1, nextReviewAt = now, timesWrong = 1)
+
+        val updateTime = 1_000_000_000L
+        repository.updateCard(card, correct = true, nowMillis = updateTime)
+
+        val updatedEntity = reviewCardDao.getById(1L)
+        assertEquals(initialCreatedAt, updatedEntity?.createdAt)
+    }
 }
