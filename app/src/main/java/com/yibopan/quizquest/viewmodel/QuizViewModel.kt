@@ -93,7 +93,7 @@ class QuizViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                error = "No questions found for this level.",
+                                error = QuizError.LOAD_FAILED,
                             )
                         }
                     } else {
@@ -110,7 +110,7 @@ class QuizViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = result.error,
+                            error = QuizError.LOAD_FAILED,
                         )
                     }
                 }
@@ -146,17 +146,41 @@ class QuizViewModel(
 
     fun flagCurrentQuestion() {
         val currentQ = quizState.currentQuestion ?: return
+        stopTimer()
+
         viewModelScope.launch {
-            AppLog.d(TAG, "Learner reported question index ${quizState.currentIndex + 1}")
-            triviaRepository.flagQuestion(currentQ.text)
-            if (quizState.isAnswered) {
-                nextQuestion()
+            try {
+                triviaRepository.flagQuestion(currentQ.text)
+                AppLog.d(TAG, "Learner reported question: ${currentQ.text}")
+            } catch (e: Exception) {
+                AppLog.e(TAG, "Failed to flag question in repository", e)
+            }
+
+            quizState = quizEngine.skipCurrent(quizState)
+
+            if (quizState.questions.isEmpty()) {
+                stopTimer()
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = QuizError.ALL_REPORTED,
+                        showReportedMessage = true,
+                    )
+                }
+            } else if (quizState.isFinished) {
+                _uiState.update { it.copy(showReportedMessage = true) }
+                saveSession()
             } else {
-                val timeTaken = timeProvider.now() - questionStartTime
-                quizState = quizEngine.timeUp(quizState, timeTaken)
-                nextQuestion()
+                questionStartTime = timeProvider.now()
+                _uiState.update { it.copy(showReportedMessage = true) }
+                updateUIState()
+                startTimerIfNeeded()
             }
         }
+    }
+
+    fun reportedMessageShown() {
+        _uiState.update { it.copy(showReportedMessage = false) }
     }
 
     fun nextQuestion() {

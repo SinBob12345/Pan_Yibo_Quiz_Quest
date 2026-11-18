@@ -38,6 +38,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -62,6 +64,7 @@ import androidx.window.core.layout.WindowSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import com.yibopan.quizquest.R
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
+import com.yibopan.quizquest.viewmodel.QuizError
 import com.yibopan.quizquest.viewmodel.QuizUIState
 import com.yibopan.quizquest.viewmodel.QuizViewModel
 import com.yibopan.quizquest.views.components.AppTopBar
@@ -100,6 +103,7 @@ fun QuizScreen(
         onSelectAnswer = { quizViewModel.selectAnswer(it) },
         onFiftyFiftyClicked = { quizViewModel.useFiftyFifty() },
         onReportQuestionClicked = { quizViewModel.flagCurrentQuestion() },
+        onReportedMessageShown = { quizViewModel.reportedMessageShown() },
         onNextClicked = { quizViewModel.nextQuestion() },
         onRetryClicked = { quizViewModel.retry() },
         windowSizeClass = windowSizeClass,
@@ -114,6 +118,7 @@ fun QuizScreenContent(
     onFiftyFiftyClicked: () -> Unit,
     modifier: Modifier = Modifier,
     onReportQuestionClicked: () -> Unit = {},
+    onReportedMessageShown: () -> Unit = {},
     onNextClicked: () -> Unit = {},
     onRetryClicked: () -> Unit = {},
     windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass,
@@ -121,8 +126,18 @@ fun QuizScreenContent(
     var showLeaveDialog by remember { mutableStateOf(false) }
     var showReportDialog by remember { mutableStateOf(false) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val reportedSnackbarMsg = stringResource(R.string.quiz_reported_snackbar)
+
     val isQuizInProgress = uiState.questionNumber > 0 && !uiState.isLoading && uiState.error == null && uiState.finishedSessionId == null
     val isExpanded = windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.EXPANDED
+
+    LaunchedEffect(uiState.showReportedMessage) {
+        if (uiState.showReportedMessage) {
+            snackbarHostState.showSnackbar(reportedSnackbarMsg)
+            onReportedMessageShown()
+        }
+    }
 
     // Catch system back gesture / back button when a quiz level is in progress
     BackHandler(enabled = isQuizInProgress) {
@@ -181,7 +196,7 @@ fun QuizScreenContent(
                             .weight(1f)
                             .defaultMinSize(minHeight = 48.dp),
                     ) {
-                        Text(text = stringResource(R.string.quiz_leave_dialog_dismiss))
+                        Text(text = stringResource(R.string.common_cancel))
                     }
                     OutlinedButton(
                         onClick = {
@@ -242,6 +257,7 @@ fun QuizScreenContent(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -257,15 +273,19 @@ fun QuizScreenContent(
                 LoadingState()
             }
 
-            // Lecture 5 & Lecture 9: AnimatedVisibility for friendly error state with retry
+            // Lecture 5 & Lecture 9: AnimatedVisibility for friendly error state
             AnimatedVisibility(
                 visible = !uiState.isLoading && uiState.error != null,
                 enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)),
                 exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
             ) {
+                val (errorMsg, retryAction) = when (uiState.error) {
+                    QuizError.ALL_REPORTED -> stringResource(R.string.quiz_error_all_reported) to null
+                    else -> stringResource(R.string.quiz_error_friendly) to onRetryClicked
+                }
                 ErrorState(
-                    message = stringResource(R.string.quiz_error_friendly),
-                    onRetry = onRetryClicked,
+                    message = errorMsg,
+                    onRetry = retryAction,
                 )
             }
 

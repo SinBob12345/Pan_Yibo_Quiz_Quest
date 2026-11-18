@@ -15,6 +15,7 @@
     <!-- Common -->
     <string name="cd_back">Back</string>
     <string name="cd_report_question">Report question</string>
+    <string name="common_cancel">Cancel</string>
     <string name="action_retry">Try again</string>
     <string name="state_loading">Loading</string>
     <string name="stage_notice_title">Coming in stage %1$d</string>
@@ -65,6 +66,8 @@
     <string name="quiz_report_question_message">Reported questions are stored on your device and will never be shown to you again.</string>
     <string name="quiz_report_dialog_confirm">Report</string>
     <string name="quiz_error_friendly">Unable to load questions. Please check your network connection and try again.</string>
+    <string name="quiz_error_all_reported">All questions in this level were reported. Please try another level.</string>
+    <string name="quiz_reported_snackbar">Thanks – this question is now hidden on this phone.</string>
 
     <!-- Result -->
     <string name="result_title">Results</string>

@@ -22,6 +22,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -165,7 +166,7 @@ class QuizViewModelTest {
     }
 
     @Test
-    fun `flagCurrentQuestion flags question in repository and advances`() = runTest {
+    fun `flagCurrentQuestion flags question in repository and advances without review card or wrong count`() = runTest {
         val viewModel = QuizViewModel(
             categoryId = 17,
             level = 1,
@@ -181,7 +182,41 @@ class QuizViewModelTest {
 
         assertEquals(1, triviaRepo.flaggedQuestions.size)
         assertEquals("Capital of France?", triviaRepo.flaggedQuestions[0])
-        assertEquals(2, viewModel.uiState.value.questionNumber)
+        assertEquals(1, viewModel.uiState.value.totalQuestions)
+
+        viewModel.selectAnswer("Tokyo")
+        viewModel.nextQuestion()
+
+        val result = progressRepo.getQuizResult(1L).first()
+        assertNotNull(result)
+        assertEquals(1, result?.totalCount)
+        assertEquals(1, result?.correctCount)
+
+        val dueCount = reviewRepo.getDueCount(1000L).first()
+        assertEquals(0, dueCount)
+    }
+
+    @Test
+    fun `reporting every question saves no session and sets error to ALL_REPORTED`() = runTest {
+        val viewModel = QuizViewModel(
+            categoryId = 17,
+            level = 1,
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
+            quizEngine = quizEngine,
+            timeProvider = { 1000L },
+        )
+
+        viewModel.flagCurrentQuestion()
+        viewModel.flagCurrentQuestion()
+
+        val state = viewModel.uiState.value
+        assertNull(state.finishedSessionId)
+        assertTrue(progressRepo.quizResultsState.value.isEmpty())
+        assertEquals(QuizError.ALL_REPORTED, state.error)
+        assertTrue(state.showReportedMessage)
     }
 
     @Test
