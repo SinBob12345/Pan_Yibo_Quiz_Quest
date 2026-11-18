@@ -198,4 +198,58 @@ class QuizEngineTest {
         assertEquals(QuizEngine.DEFAULT_HINTS, hintState.hintsLeft)
         assertTrue(hintState.removedOptions.isEmpty())
     }
+
+    @Test
+    fun `skipCurrent on question 1 of 3 leaves 2 questions with currentIndex 0 and old question 2 as current`() {
+        val q3 = question1.copy(id = 103L, text = "Capital of Germany?")
+        val initial = engine.start(listOf(question1, question2, q3))
+
+        val skipped = engine.skipCurrent(initial)
+
+        assertEquals(2, skipped.questions.size)
+        assertEquals(2, skipped.options.size)
+        assertEquals(0, skipped.currentIndex)
+        assertEquals("Is water liquid at room temp?", skipped.currentQuestion?.text)
+        assertNull(skipped.selectedAnswer)
+        assertFalse(skipped.isFinished)
+    }
+
+    @Test
+    fun `skipCurrent after answering correctly removes answer record and decreases correctCount`() {
+        val initial = engine.start(listOf(question1, question2))
+        val answered = engine.selectAnswer(initial, answer = "Paris", timeTakenMs = 1000L)
+        assertEquals(1, answered.correctCount)
+        assertEquals(1, answered.answers.size)
+
+        val skipped = engine.skipCurrent(answered)
+
+        assertEquals(0, skipped.correctCount)
+        assertTrue(skipped.answers.isEmpty())
+        assertNull(skipped.selectedAnswer)
+    }
+
+    @Test
+    fun `skipCurrent on last question makes isFinished true when other questions remain`() {
+        val initial = engine.start(listOf(question1, question2))
+        val answered1 = engine.selectAnswer(initial, answer = "Paris", timeTakenMs = 1000L)
+        val onQ2 = engine.next(answered1) // currentIndex = 1 (question 2)
+
+        val skipped = engine.skipCurrent(onQ2)
+
+        assertEquals(1, skipped.questions.size)
+        assertEquals(1, skipped.currentIndex)
+        assertTrue(skipped.isFinished)
+        assertNull(skipped.currentQuestion)
+    }
+
+    @Test
+    fun `skipCurrent on only question leaves questions empty`() {
+        val initial = engine.start(listOf(question1))
+
+        val skipped = engine.skipCurrent(initial)
+
+        assertTrue(skipped.questions.isEmpty())
+        assertTrue(skipped.options.isEmpty())
+        assertNull(skipped.currentQuestion)
+    }
 }

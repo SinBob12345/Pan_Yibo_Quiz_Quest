@@ -39,6 +39,7 @@ data class QuizState(
  *  - useFiftyFifty: only for MULTIPLE questions that are unanswered and when hintsLeft > 0;
  *    removes exactly two wrong options chosen with [random], hintsLeft - 1.
  *    Otherwise returns the state unchanged.
+ *  - skipCurrent: removes the current question when reported by the learner (A2 Commitment #5).
  */
 class QuizEngine(
     private val shuffler: AnswerShuffler,
@@ -121,6 +122,40 @@ class QuizEngine(
         return state.copy(
             hintsLeft = state.hintsLeft - 1,
             removedOptions = wrongToHide,
+        )
+    }
+
+    /**
+     * Removes the current question from the active session when the learner reports a question (A2 Commitment #5).
+     *
+     * The question and its options are removed from the session queue. Any recorded [AnswerRecord] for this question is
+     * discarded, and [QuizState.correctCount] is adjusted accordingly so that a reported question never counts for or
+     * against the learner.
+     */
+    fun skipCurrent(state: QuizState): QuizState {
+        val currentQ = state.currentQuestion ?: return state
+        if (state.isFinished) return state
+
+        val idx = state.currentIndex
+
+        val newQuestions = state.questions.toMutableList().apply { removeAt(idx) }
+        val newOptions = state.options.toMutableList().apply { removeAt(idx) }
+
+        val matchingRecord = state.answers.find { it.questionText == currentQ.text }
+        val newAnswers = state.answers.filterNot { it.questionText == currentQ.text }
+        val newCorrectCount = if (matchingRecord?.isCorrect == true) {
+            (state.correctCount - 1).coerceAtLeast(0)
+        } else {
+            state.correctCount
+        }
+
+        return state.copy(
+            questions = newQuestions,
+            options = newOptions,
+            selectedAnswer = null,
+            correctCount = newCorrectCount,
+            removedOptions = emptySet(),
+            answers = newAnswers,
         )
     }
 
