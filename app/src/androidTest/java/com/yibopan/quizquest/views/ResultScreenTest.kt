@@ -1,6 +1,7 @@
 package com.yibopan.quizquest.views
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -11,7 +12,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** UI tests for [ResultScreenContent] verifying score, equal-weight buttons, and stopping cue card. */
+/** UI tests for [ResultScreenContent] verifying score, equal-weight buttons, and next level lock states. */
 @RunWith(AndroidJUnit4::class)
 class ResultScreenTest {
 
@@ -19,7 +20,7 @@ class ResultScreenTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun displaysScoreAndEqualWeightActionButtons() {
+    fun displaysScoreAndBothActionButtons() {
         val uiState = ResultUIState(
             sessionId = 1L,
             categoryId = 17,
@@ -45,6 +46,32 @@ class ResultScreenTest {
         composeTestRule.onNodeWithText("8 of 10 correct").assertIsDisplayed()
         composeTestRule.onNodeWithText("Back to map").assertIsDisplayed()
         composeTestRule.onNodeWithText("Next level").assertIsDisplayed()
+    }
+
+    @Test
+    fun nextLevelDisabledWhenLocked() {
+        val uiState = ResultUIState(
+            sessionId = 1L,
+            categoryId = 17,
+            level = 1,
+            correctCount = 4,
+            totalCount = 10,
+            stars = 0,
+            isNextLevelUnlocked = false,
+            isDailyGoalReached = false,
+        )
+
+        composeTestRule.setContent {
+            QuizQuestTheme {
+                ResultScreenContent(
+                    uiState = uiState,
+                    onBackToMapClicked = {},
+                    onNextLevelClicked = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Next level").assertIsNotEnabled()
     }
 
     @Test

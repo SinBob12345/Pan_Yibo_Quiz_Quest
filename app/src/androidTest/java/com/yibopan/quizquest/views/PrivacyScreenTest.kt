@@ -11,7 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** UI tests for [PrivacyScreenContent] verifying privacy notice, export, and delete items. */
+/** UI tests for [PrivacyScreenContent] verifying privacy notice, export, and delete dialog. */
 @RunWith(AndroidJUnit4::class)
 class PrivacyScreenTest {
 
@@ -29,8 +29,23 @@ class PrivacyScreenTest {
         }
 
         composeTestRule.onNodeWithTag(TestTags.SCREEN_PRIVACY).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Data Safety Notice").assertIsDisplayed()
+        composeTestRule.onNodeWithText("What is stored").assertIsDisplayed()
         composeTestRule.onNodeWithText("Export My Data").assertIsDisplayed()
         composeTestRule.onNodeWithText("Delete All Data").assertIsDisplayed()
+    }
+
+    @Test
+    fun deleteDialogShowsExactNeutralWording() {
+        val uiState = PrivacyUIState(showDeleteConfirmation = true)
+
+        composeTestRule.setContent {
+            QuizQuestTheme {
+                PrivacyScreenContent(uiState = uiState, onBackPressed = {})
+            }
+        }
+
+        composeTestRule.onNodeWithText("Delete all my data?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Delete").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Continue").assertIsDisplayed()
     }
 }

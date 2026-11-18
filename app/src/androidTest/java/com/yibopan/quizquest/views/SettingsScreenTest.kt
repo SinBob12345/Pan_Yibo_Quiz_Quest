@@ -4,15 +4,17 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.yibopan.quizquest.data.model.UserSettings
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
 import com.yibopan.quizquest.viewmodel.SettingsUIState
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** UI tests for [SettingsScreenContent] verifying setting rows and options. */
+/** UI tests for [SettingsScreenContent] verifying setting rows and toggle lambdas. */
 @RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
 
@@ -37,5 +39,24 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("Reduce motion").assertIsDisplayed()
         composeTestRule.onNodeWithText("Questions per level").assertIsDisplayed()
         composeTestRule.onNodeWithText("Privacy & your data").assertIsDisplayed()
+    }
+
+    @Test
+    fun togglingSoundCallsLambda() {
+        var toggledValue: Boolean? = null
+        val uiState = SettingsUIState(settings = UserSettings(soundEnabled = true))
+
+        composeTestRule.setContent {
+            QuizQuestTheme {
+                SettingsScreenContent(
+                    uiState = uiState,
+                    onPrivacyClicked = {},
+                    onSoundChanged = { toggledValue = it },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Sound effects").performClick()
+        assertEquals(false, toggledValue)
     }
 }

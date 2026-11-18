@@ -1,5 +1,7 @@
 package com.yibopan.quizquest.views
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -13,7 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** UI tests for [WorldMapScreenContent] verifying grid rendering, stars, and level labels. */
+/** UI tests for [WorldMapScreenContent] verifying grid rendering, stars, and locked state descriptions. */
 @RunWith(AndroidJUnit4::class)
 class WorldMapScreenTest {
 
@@ -45,5 +47,28 @@ class WorldMapScreenTest {
         composeTestRule.onNodeWithText("Science & Nature").assertIsDisplayed()
         composeTestRule.onNodeWithText("Level 1").assertIsDisplayed()
         composeTestRule.onNodeWithText("Level 2").assertIsDisplayed()
+    }
+
+    @Test
+    fun lockedLevelHasLockedStateDescription() {
+        val uiState = WorldMapUIState(
+            categoryId = 17,
+            worldName = "Science & Nature",
+            levels = listOf(
+                LevelItem(level = 1, difficulty = Difficulty.EASY, stars = 0, unlocked = false),
+            ),
+        )
+
+        composeTestRule.setContent {
+            QuizQuestTheme {
+                WorldMapScreenContent(
+                    uiState = uiState,
+                    onBackPressed = {},
+                    onLevelClicked = {},
+                )
+            }
+        }
+
+        composeTestRule.onNode(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Locked")).assertIsDisplayed()
     }
 }
