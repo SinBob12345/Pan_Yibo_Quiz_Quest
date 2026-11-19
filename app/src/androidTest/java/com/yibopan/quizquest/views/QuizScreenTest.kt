@@ -1,5 +1,7 @@
 package com.yibopan.quizquest.views
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -13,7 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** UI tests for [QuizScreenContent] verifying questions, options, feedback, 50/50, and leave dialog. */
+/** UI tests for [QuizScreenContent] verifying questions, options, feedback, 50/50, leave dialog, and state descriptions. */
 @RunWith(AndroidJUnit4::class)
 class QuizScreenTest {
 
@@ -143,5 +145,40 @@ class QuizScreenTest {
         composeTestRule.onNodeWithText("Leave this level?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Leave").assertIsDisplayed()
         composeTestRule.onNodeWithText("Continue").assertIsDisplayed()
+    }
+
+    @Test
+    fun displaysStateDescriptionsForCorrectAndIncorrectAnswers() {
+        val uiState = QuizUIState(
+            categoryId = 17,
+            level = 1,
+            questionNumber = 1,
+            totalQuestions = 10,
+            questionText = "What is the capital of France?",
+            options = listOf("Paris", "London", "Berlin", "Rome"),
+            selectedAnswer = "London",
+            correctAnswer = "Paris",
+        )
+
+        composeTestRule.setContent {
+            QuizQuestTheme {
+                QuizScreenContent(
+                    uiState = uiState,
+                    onBackPressed = {},
+                    onSelectAnswer = {},
+                    onFiftyFiftyClicked = {},
+                    onNextClicked = {},
+                    onRetryClicked = {},
+                )
+            }
+        }
+
+        composeTestRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Correct answer"),
+        ).assertIsDisplayed()
+
+        composeTestRule.onNode(
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Your answer, incorrect"),
+        ).assertIsDisplayed()
     }
 }

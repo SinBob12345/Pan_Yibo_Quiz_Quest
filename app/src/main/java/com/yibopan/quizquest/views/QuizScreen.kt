@@ -57,6 +57,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -365,50 +366,12 @@ fun QuizScreenContent(
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 uiState.options.forEach { option ->
                                     if (option !in uiState.removedOptions) {
-                                        val isSelected = (uiState.selectedAnswer == option)
-                                        val isCorrectOption = (uiState.correctAnswer == option)
-                                        val isWrongSelection = (isSelected && uiState.correctAnswer != null && !isCorrectOption)
-
-                                        val containerColor = when {
-                                            uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.primaryContainer
-                                            isWrongSelection -> MaterialTheme.colorScheme.errorContainer
-                                            isSelected -> MaterialTheme.colorScheme.surfaceVariant
-                                            else -> MaterialTheme.colorScheme.surface
-                                        }
-
-                                        Button(
-                                            onClick = { onSelectAnswer(option) },
-                                            enabled = uiState.selectedAnswer == null,
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = containerColor,
-                                                contentColor = when {
-                                                    uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.onPrimaryContainer
-                                                    isWrongSelection -> MaterialTheme.colorScheme.onErrorContainer
-                                                    else -> MaterialTheme.colorScheme.onSurface
-                                                },
-                                            ),
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .defaultMinSize(minHeight = 48.dp)
-                                                .semantics { onClick(label = selectLabel, action = null) },
-                                        ) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 8.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically,
-                                            ) {
-                                                Text(text = option, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                                                if (uiState.correctAnswer != null) {
-                                                    if (isCorrectOption) {
-                                                        Icon(imageVector = Icons.Rounded.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                                    } else if (isWrongSelection) {
-                                                        Icon(imageVector = Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                                                    }
-                                                }
-                                            }
-                                        }
+                                        AnswerOptionButton(
+                                            option = option,
+                                            uiState = uiState,
+                                            onSelect = onSelectAnswer,
+                                            selectLabel = selectLabel,
+                                        )
                                     }
                                 }
                             }
@@ -534,51 +497,12 @@ fun QuizScreenContent(
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     uiState.options.forEach { option ->
                                         if (option !in uiState.removedOptions) {
-                                            val isSelected = (uiState.selectedAnswer == option)
-                                            val isCorrectOption = (uiState.correctAnswer == option)
-                                            val isWrongSelection = (isSelected && uiState.correctAnswer != null && !isCorrectOption)
-
-                                            val containerColor = when {
-                                                uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.primaryContainer
-                                                isWrongSelection -> MaterialTheme.colorScheme.errorContainer
-                                                isSelected -> MaterialTheme.colorScheme.surfaceVariant
-                                                else -> MaterialTheme.colorScheme.surface
-                                            }
-
-                                            Button(
-                                                onClick = { onSelectAnswer(option) },
-                                                enabled = uiState.selectedAnswer == null,
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = containerColor,
-                                                    contentColor = when {
-                                                        uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.onPrimaryContainer
-                                                        isWrongSelection -> MaterialTheme.colorScheme.onErrorContainer
-                                                        else -> MaterialTheme.colorScheme.onSurface
-                                                    },
-                                                ),
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .defaultMinSize(minHeight = 48.dp)
-                                                    .semantics { onClick(label = selectLabel, action = null) },
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 8.dp),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                ) {
-                                                    Text(text = option, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-
-                                                    if (uiState.correctAnswer != null) {
-                                                        if (isCorrectOption) {
-                                                            Icon(imageVector = Icons.Rounded.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                                        } else if (isWrongSelection) {
-                                                            Icon(imageVector = Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            AnswerOptionButton(
+                                                option = option,
+                                                uiState = uiState,
+                                                onSelect = onSelectAnswer,
+                                                selectLabel = selectLabel,
+                                            )
                                         }
                                     }
                                 }
@@ -639,6 +563,88 @@ fun QuizScreenContent(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnswerOptionButton(
+    option: String,
+    uiState: QuizUIState,
+    onSelect: (String) -> Unit,
+    selectLabel: String,
+    modifier: Modifier = Modifier,
+) {
+    val isSelected = (uiState.selectedAnswer == option)
+    val isCorrectOption = (uiState.correctAnswer == option)
+    val isWrongSelection = (isSelected && uiState.correctAnswer != null && !isCorrectOption)
+
+    val containerColor = when {
+        uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.primaryContainer
+        isWrongSelection -> MaterialTheme.colorScheme.errorContainer
+        isSelected -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surface
+    }
+
+    val contentColor = when {
+        uiState.correctAnswer != null && isCorrectOption -> MaterialTheme.colorScheme.onPrimaryContainer
+        isWrongSelection -> MaterialTheme.colorScheme.onErrorContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val stateDesc = when {
+        uiState.correctAnswer != null && isCorrectOption -> stringResource(R.string.quiz_state_correct_answer)
+        isWrongSelection -> stringResource(R.string.quiz_state_your_wrong_answer)
+        else -> null
+    }
+
+    Button(
+        onClick = { onSelect(option) },
+        enabled = uiState.selectedAnswer == null,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+            disabledContainerColor = containerColor,
+            disabledContentColor = contentColor,
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .semantics {
+                onClick(label = selectLabel, action = null)
+                if (stateDesc != null) {
+                    stateDescription = stateDesc
+                }
+            },
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = option,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+
+            if (uiState.correctAnswer != null) {
+                if (isCorrectOption) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                } else if (isWrongSelection) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
         }
