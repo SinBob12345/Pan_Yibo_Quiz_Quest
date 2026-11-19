@@ -11,6 +11,7 @@ import com.yibopan.quizquest.data.rules.DailyGoalTracker
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
 import com.yibopan.quizquest.util.AppLog
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -41,12 +42,15 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUIState(isLoading = true))
     val uiState: StateFlow<HomeUIState> get() = _uiState
 
+    private var observeJob: Job? = null
+
     init {
-        observeHomeData()
+        refresh()
     }
 
-    private fun observeHomeData() {
-        viewModelScope.launch {
+    fun refresh() {
+        observeJob?.cancel()
+        observeJob = viewModelScope.launch {
             val now = timeProvider.now()
             val startOfDay = DailyGoalTracker.startOfDayMillis(now, TimeZone.getDefault())
 

@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yibopan.quizquest.R
 import com.yibopan.quizquest.data.model.Category
@@ -61,6 +62,12 @@ fun HomeScreen(
 ) {
     val homeViewModel: HomeViewModel = koinViewModel()
     val homeUIState by homeViewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        homeViewModel.refresh()
+        onPauseOrDispose { }
+    }
+
     HomeScreenContent(
         uiState = homeUIState,
         onWorldClicked = onWorldClicked,

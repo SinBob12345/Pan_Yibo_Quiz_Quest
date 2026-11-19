@@ -143,10 +143,35 @@ class HomeViewModelTest {
             reviewRepository = reviewRepo,
             statsRepository = statsRepo,
             settingsRepository = settingsRepo,
-            timeProvider = { now + 90_000_000L },
+            timeProvider = { now },
         )
 
         val state = viewModel.uiState.value
         assertEquals(1, state.dueReviewCount)
+    }
+
+    @Test
+    fun `refresh updates due review card count when wrong answers are added later`() = runTest {
+        var currentTime = 1_000_000_000L
+        val viewModel = HomeViewModel(
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            statsRepository = statsRepo,
+            settingsRepository = settingsRepo,
+            timeProvider = { currentTime },
+        )
+
+        assertEquals(0, viewModel.uiState.value.dueReviewCount)
+
+        currentTime += 5000L
+        reviewRepo.addWrongAnswers(
+            listOf(AnswerRecord("New Wrong Q", "B", "A", false, 1000L)),
+            nowMillis = currentTime,
+        )
+
+        viewModel.refresh()
+
+        assertEquals(1, viewModel.uiState.value.dueReviewCount)
     }
 }

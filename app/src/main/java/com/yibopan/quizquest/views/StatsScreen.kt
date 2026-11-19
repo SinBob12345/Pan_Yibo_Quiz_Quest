@@ -254,7 +254,7 @@ private fun CategoryAccuracyRow(item: CategoryAccuracy) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(text = item.categoryName, style = MaterialTheme.typography.titleSmall)
+                Text(text = item.categoryName, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 Text(text = "$percent%", style = MaterialTheme.typography.bodySmall)
             }
             LinearProgressIndicator(
@@ -331,7 +331,12 @@ private fun RecentResultRow(result: QuizResult, categoryNameMap: Map<Int, String
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(
                     text = stringResource(R.string.stats_recent_item_desc, worldName, result.level, result.correctCount, result.totalCount),
                     style = MaterialTheme.typography.titleSmall,
