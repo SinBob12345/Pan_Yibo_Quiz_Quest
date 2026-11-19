@@ -4,9 +4,12 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
 import com.yibopan.quizquest.viewmodel.PrivacyUIState
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,22 +33,36 @@ class PrivacyScreenTest {
 
         composeTestRule.onNodeWithTag(TestTags.SCREEN_PRIVACY).assertIsDisplayed()
         composeTestRule.onNodeWithText("What is stored").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Backups").assertIsDisplayed()
+        composeTestRule.onNodeWithText("How long we keep it").assertIsDisplayed()
         composeTestRule.onNodeWithText("Export My Data").assertIsDisplayed()
         composeTestRule.onNodeWithText("Delete All Data").assertIsDisplayed()
     }
 
     @Test
-    fun deleteDialogShowsExactNeutralWording() {
+    fun deleteDialogShowsKeepMyDataAndDeleteEverything() {
+        var dismissClicked = false
+        var confirmClicked = false
         val uiState = PrivacyUIState(showDeleteConfirmation = true)
 
         composeTestRule.setContent {
             QuizQuestTheme {
-                PrivacyScreenContent(uiState = uiState, onBackPressed = {})
+                PrivacyScreenContent(
+                    uiState = uiState,
+                    onBackPressed = {},
+                    onDismissDeleteClicked = { dismissClicked = true },
+                    onConfirmDeleteClicked = { confirmClicked = true },
+                )
             }
         }
 
         composeTestRule.onNodeWithText("Delete all my data?").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Delete").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Continue").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Keep my data").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Delete everything").assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("Keep my data").performClick()
+
+        assertTrue(dismissClicked)
+        assertFalse(confirmClicked)
     }
 }

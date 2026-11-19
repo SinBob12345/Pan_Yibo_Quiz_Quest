@@ -133,16 +133,36 @@
 
     <!-- Plain-language Privacy & Data Safety -->
     <string name="privacy_what_is_stored_title">What is stored</string>
-    <string name="privacy_what_is_stored_desc">Your level scores, star ratings, flashcards, and app preferences are stored locally on this device in Room database.</string>
+    <string name="privacy_what_is_stored_desc">Your stars, scores, answer history, review cards and settings are saved only on this phone.</string>
+    <string name="privacy_retention_title">How long we keep it</string>
+    <string name="privacy_retention_desc">Your answer history is kept for the time you choose in Settings (30 days, 90 days or until you delete it). Stars, scores and review cards stay until you delete them.</string>
     <string name="privacy_never_collected_title">What is never collected</string>
     <string name="privacy_never_collected_desc">QuizQuest does not collect or transmit personal names, email addresses, advertising IDs, location data, or analytics telemetry.</string>
     <string name="privacy_opentdb_title">Network requests &amp; OpenTDB</string>
     <string name="privacy_opentdb_desc">Questions are fetched directly from opentdb.com via HTTPS. OpenTDB servers see standard network HTTP requests including your IP address, but no user identifiers or account data are sent.</string>
-    <string name="privacy_backups_title">Data backups &amp; export</string>
-    <string name="privacy_backups_desc">Your data stays on your device. You can export a JSON copy of all your records anytime or delete them completely.</string>
+    <string name="privacy_backups_title">Backups</string>
+    <string name="privacy_backups_desc">Your data is not included in cloud backups. Use Export to keep your own copy.</string>
+    <string name="privacy_mistakes_title">Questions may contain mistakes</string>
+    <string name="privacy_mistakes_desc">Questions are written by the Open Trivia Database community and may contain mistakes. Tap the flag on a question to report it – it is then hidden on this phone. Reports are not sent anywhere.</string>
     <string name="privacy_attribution_title">Data source &amp; attribution</string>
     <string name="privacy_attribution_desc">Trivia question content is provided by the Open Trivia Database (opentdb.com) under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).</string>
     <string name="privacy_feedback_title">Feedback &amp; Support</string>
     <string name="privacy_feedback_desc">Have questions or suggestions? Send feedback directly to the developers.</string>
     <string name="privacy_send_feedback">Send feedback</string>
+
+    <string name="privacy_export_title">Export My Data</string>
+    <string name="privacy_export_desc">Share or save a JSON copy of all your scores and flashcards</string>
+    <string name="privacy_export_button">Export</string>
+    <string name="privacy_delete_title">Delete All Data</string>
+    <string name="privacy_delete_desc">Remove everything QuizQuest has saved on this phone.</string>
+    <string name="privacy_delete_button">Delete</string>
+
+    <string name="privacy_delete_dialog_title">Delete all my data?</string>
+    <string name="privacy_delete_dialog_text">This deletes your stars and scores, answer history, review cards, settings, reported questions and downloaded questions from this phone. It cannot be undone. Tip: use Export first to keep a copy.</string>
+    <string name="privacy_delete_keep">Keep my data</string>
+    <string name="privacy_delete_confirm">Delete everything</string>
+
+    <string name="privacy_snackbar_export_ready">Data export generated</string>
+    <string name="privacy_snackbar_deleted">All data deleted successfully</string>
+    <string name="privacy_snackbar_failed">Action failed</string>
 </resources>

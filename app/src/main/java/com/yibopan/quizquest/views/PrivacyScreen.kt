@@ -100,9 +100,9 @@ fun PrivacyScreenContent(
     }
 
     val message = uiState.message
-    val exportReadyMsg = "Data export generated"
-    val deletedMsg = "All data deleted successfully"
-    val failedMsg = "Action failed"
+    val exportReadyMsg = stringResource(R.string.privacy_snackbar_export_ready)
+    val deletedMsg = stringResource(R.string.privacy_snackbar_deleted)
+    val failedMsg = stringResource(R.string.privacy_snackbar_failed)
 
     LaunchedEffect(message) {
         if (message != null) {
@@ -120,8 +120,8 @@ fun PrivacyScreenContent(
     if (uiState.showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = onDismissDeleteClicked,
-            title = { Text(text = "Delete all my data?", modifier = Modifier.semantics { heading() }) },
-            text = { Text(text = "This will permanently delete all your level scores, review flashcards, and settings from this device. This action cannot be undone.") },
+            title = { Text(text = stringResource(R.string.privacy_delete_dialog_title), modifier = Modifier.semantics { heading() }) },
+            text = { Text(text = stringResource(R.string.privacy_delete_dialog_text)) },
             confirmButton = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -133,7 +133,7 @@ fun PrivacyScreenContent(
                             .weight(1f)
                             .defaultMinSize(minHeight = 48.dp),
                     ) {
-                        Text(text = stringResource(R.string.quiz_leave_dialog_dismiss))
+                        Text(text = stringResource(R.string.privacy_delete_keep))
                     }
                     OutlinedButton(
                         onClick = onConfirmDeleteClicked,
@@ -141,7 +141,7 @@ fun PrivacyScreenContent(
                             .weight(1f)
                             .defaultMinSize(minHeight = 48.dp),
                     ) {
-                        Text(text = "Delete")
+                        Text(text = stringResource(R.string.privacy_delete_confirm))
                     }
                 }
             },
@@ -178,6 +178,10 @@ fun PrivacyScreenContent(
                                 desc = stringResource(R.string.privacy_what_is_stored_desc),
                             )
                             PrivacySection(
+                                title = stringResource(R.string.privacy_retention_title),
+                                desc = stringResource(R.string.privacy_retention_desc),
+                            )
+                            PrivacySection(
                                 title = stringResource(R.string.privacy_never_collected_title),
                                 desc = stringResource(R.string.privacy_never_collected_desc),
                             )
@@ -188,6 +192,10 @@ fun PrivacyScreenContent(
                             PrivacySection(
                                 title = stringResource(R.string.privacy_backups_title),
                                 desc = stringResource(R.string.privacy_backups_desc),
+                            )
+                            PrivacySection(
+                                title = stringResource(R.string.privacy_mistakes_title),
+                                desc = stringResource(R.string.privacy_mistakes_desc),
                             )
                             PrivacySection(
                                 title = stringResource(R.string.privacy_attribution_title),
@@ -213,8 +221,8 @@ fun PrivacyScreenContent(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                Text(text = "Export My Data", style = MaterialTheme.typography.titleSmall)
-                                Text(text = "Share or save a JSON copy of all your scores and flashcards", style = MaterialTheme.typography.bodySmall)
+                                Text(text = stringResource(R.string.privacy_export_title), style = MaterialTheme.typography.titleSmall)
+                                Text(text = stringResource(R.string.privacy_export_desc), style = MaterialTheme.typography.bodySmall)
                             }
                             OutlinedButton(
                                 onClick = onExportClicked,
@@ -222,7 +230,7 @@ fun PrivacyScreenContent(
                                 modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                             ) {
                                 Icon(imageVector = Icons.Rounded.Download, contentDescription = null)
-                                Text(text = "Export", modifier = Modifier.padding(start = 4.dp))
+                                Text(text = stringResource(R.string.privacy_export_button), modifier = Modifier.padding(start = 4.dp))
                             }
                         }
                     }
@@ -242,8 +250,8 @@ fun PrivacyScreenContent(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                Text(text = "Delete All Data", style = MaterialTheme.typography.titleSmall)
-                                Text(text = "Permanently clear all database tables on this device", style = MaterialTheme.typography.bodySmall)
+                                Text(text = stringResource(R.string.privacy_delete_title), style = MaterialTheme.typography.titleSmall)
+                                Text(text = stringResource(R.string.privacy_delete_desc), style = MaterialTheme.typography.bodySmall)
                             }
                             OutlinedButton(
                                 onClick = onRequestDeleteClicked,
@@ -251,7 +259,7 @@ fun PrivacyScreenContent(
                                 modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                             ) {
                                 Icon(imageVector = Icons.Rounded.DeleteForever, contentDescription = null)
-                                Text(text = "Delete", modifier = Modifier.padding(start = 4.dp))
+                                Text(text = stringResource(R.string.privacy_delete_button), modifier = Modifier.padding(start = 4.dp))
                             }
                         }
                     }
