@@ -60,6 +60,7 @@ class QuizViewModel(
     private var sessionStartTime: Long = 0L
     private var questionStartTime: Long = 0L
     private var timerJob: Job? = null
+    private var currentSecondsLeft: Int? = null
     private var userSettings: UserSettings = UserSettings()
     private var isSaving: Boolean = false
 
@@ -198,17 +199,21 @@ class QuizViewModel(
 
     private fun startTimerIfNeeded() {
         stopTimer()
-        val secondsPerQuestion = userSettings.timerMode.secondsPerQuestion ?: return
+        val secondsPerQuestion = userSettings.timerMode.secondsPerQuestion ?: run {
+            currentSecondsLeft = null
+            return
+        }
         if (quizState.isAnswered || quizState.isFinished) return
 
+        currentSecondsLeft = secondsPerQuestion
+
         timerJob = viewModelScope.launch {
-            var secondsLeft = secondsPerQuestion
-            while (secondsLeft > 0 && !quizState.isAnswered && !quizState.isFinished) {
-                _uiState.update { it.copy(secondsLeft = secondsLeft) }
+            while ((currentSecondsLeft ?: 0) > 0 && !quizState.isAnswered && !quizState.isFinished) {
+                _uiState.update { it.copy(secondsLeft = currentSecondsLeft) }
                 delay(1000L)
-                secondsLeft--
+                currentSecondsLeft = (currentSecondsLeft ?: 0) - 1
             }
-            if (secondsLeft <= 0 && !quizState.isAnswered && !quizState.isFinished) {
+            if ((currentSecondsLeft ?: 0) <= 0 && !quizState.isAnswered && !quizState.isFinished) {
                 AppLog.d(TAG, "Timer expired on question index ${quizState.currentIndex + 1}")
                 val timeTaken = timeProvider.now() - questionStartTime
                 quizState = quizEngine.timeUp(quizState, timeTaken)
@@ -251,6 +256,8 @@ class QuizViewModel(
     private fun updateUIState() {
         val currentQ = quizState.currentQuestion
         val secondsPerQuestion = userSettings.timerMode.secondsPerQuestion
+        val currentRecord = quizState.answers.lastOrNull { it.questionText == currentQ?.text }
+        val isTimeUp = (quizState.isAnswered && currentRecord != null && currentRecord.chosenAnswer == null)
 
         _uiState.update {
             it.copy(
@@ -264,8 +271,9 @@ class QuizViewModel(
                 selectedAnswer = quizState.selectedAnswer,
                 correctAnswer = if (quizState.isAnswered) currentQ?.correctAnswer else null,
                 hintsLeft = quizState.hintsLeft,
-                secondsLeft = if (secondsPerQuestion != null && !quizState.isAnswered) secondsPerQuestion else null,
+                secondsLeft = if (secondsPerQuestion != null && !quizState.isAnswered) currentSecondsLeft else null,
                 reduceMotion = userSettings.reduceMotion,
+                isTimeUp = isTimeUp,
             )
         }
     }

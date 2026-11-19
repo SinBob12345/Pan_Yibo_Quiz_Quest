@@ -270,7 +270,7 @@ class QuizViewModelTest {
     }
 
     @Test
-    fun `timer triggers timeUp when time runs out`() = runTest {
+    fun `letting the timer run out sets isTimeUp to true`() = runTest {
         settingsRepo.updateSettings(UserSettings(timerMode = TimerMode.CHALLENGE))
 
         val viewModel = QuizViewModel(
@@ -291,5 +291,32 @@ class QuizViewModelTest {
         val state = viewModel.uiState.value
         assertNotNull(state.selectedAnswer)
         assertEquals("Paris", state.correctAnswer)
+        assertTrue(state.isTimeUp)
+    }
+
+    @Test
+    fun `after 5 seconds useFiftyFifty does not reset secondsLeft to full value`() = runTest {
+        settingsRepo.updateSettings(UserSettings(timerMode = TimerMode.CHALLENGE))
+
+        val viewModel = QuizViewModel(
+            categoryId = 17,
+            level = 1,
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
+            quizEngine = quizEngine,
+            timeProvider = { 1000L },
+        )
+
+        advanceTimeBy(5000L)
+        val secondsBeforeHint = viewModel.uiState.value.secondsLeft
+        assertNotNull(secondsBeforeHint)
+        assertTrue(secondsBeforeHint!! < 15)
+
+        viewModel.useFiftyFifty()
+
+        val secondsAfterHint = viewModel.uiState.value.secondsLeft
+        assertEquals(secondsBeforeHint, secondsAfterHint)
     }
 }

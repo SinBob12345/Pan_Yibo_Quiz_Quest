@@ -376,50 +376,11 @@ fun QuizScreenContent(
                                 }
                             }
 
-                            if (uiState.selectedAnswer != null) {
-                                val isUserCorrect = (uiState.selectedAnswer == uiState.correctAnswer)
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (isUserCorrect) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .semantics { liveRegion = LiveRegionMode.Polite },
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isUserCorrect) Icons.Rounded.CheckCircle else Icons.Rounded.Close,
-                                            contentDescription = null,
-                                            tint = if (isUserCorrect) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
-                                        )
-                                        Text(
-                                            text = if (isUserCorrect) stringResource(R.string.quiz_feedback_correct) else stringResource(R.string.quiz_feedback_incorrect, uiState.correctAnswer.orEmpty()),
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = if (isUserCorrect) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
-                                        )
-                                    }
-                                }
-
-                                Button(
-                                    onClick = onNextClicked,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .defaultMinSize(minHeight = 48.dp)
-                                        .semantics { onClick(label = nextLabel, action = null) },
-                                ) {
-                                    Text(
-                                        text = if (uiState.questionNumber >= uiState.totalQuestions) {
-                                            stringResource(R.string.quiz_finish_quiz)
-                                        } else {
-                                            stringResource(R.string.quiz_next_question)
-                                        },
-                                    )
-                                }
-                            }
+                            FeedbackSection(
+                                uiState = uiState,
+                                onNextClicked = onNextClicked,
+                                nextLabel = nextLabel,
+                            )
                         }
                     }
                 } else {
@@ -511,59 +472,81 @@ fun QuizScreenContent(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        AnimatedVisibility(
-                            visible = uiState.selectedAnswer != null,
-                            enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)) + scaleIn(initialScale = 0.95f, animationSpec = tween(200)),
-                            exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                val isUserCorrect = (uiState.selectedAnswer == uiState.correctAnswer)
-
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (isUserCorrect) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .semantics { liveRegion = LiveRegionMode.Polite },
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isUserCorrect) Icons.Rounded.CheckCircle else Icons.Rounded.Close,
-                                            contentDescription = null,
-                                            tint = if (isUserCorrect) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
-                                        )
-                                        Text(
-                                            text = if (isUserCorrect) stringResource(R.string.quiz_feedback_correct) else stringResource(R.string.quiz_feedback_incorrect, uiState.correctAnswer.orEmpty()),
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = if (isUserCorrect) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
-                                        )
-                                    }
-                                }
-
-                                Button(
-                                    onClick = onNextClicked,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .defaultMinSize(minHeight = 48.dp)
-                                        .semantics { onClick(label = nextLabel, action = null) },
-                                ) {
-                                    Text(
-                                        text = if (uiState.questionNumber >= uiState.totalQuestions) {
-                                            stringResource(R.string.quiz_finish_quiz)
-                                        } else {
-                                            stringResource(R.string.quiz_next_question)
-                                        },
-                                    )
-                                }
-                            }
-                        }
+                        FeedbackSection(
+                            uiState = uiState,
+                            onNextClicked = onNextClicked,
+                            nextLabel = nextLabel,
+                        )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeedbackSection(
+    uiState: QuizUIState,
+    onNextClicked: () -> Unit,
+    nextLabel: String,
+) {
+    AnimatedVisibility(
+        visible = uiState.selectedAnswer != null,
+        enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)) + scaleIn(initialScale = 0.95f, animationSpec = tween(200)),
+        exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            val isUserCorrect = (uiState.selectedAnswer == uiState.correctAnswer)
+            val isTimeUp = uiState.isTimeUp
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isUserCorrect) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Icon(
+                        imageVector = when {
+                            isUserCorrect -> Icons.Rounded.CheckCircle
+                            isTimeUp -> Icons.Rounded.Timer
+                            else -> Icons.Rounded.Close
+                        },
+                        contentDescription = null,
+                        tint = if (isUserCorrect) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Text(
+                        text = when {
+                            isUserCorrect -> stringResource(R.string.quiz_feedback_correct)
+                            isTimeUp -> stringResource(R.string.quiz_feedback_time_up, uiState.correctAnswer.orEmpty())
+                            else -> stringResource(R.string.quiz_feedback_incorrect, uiState.correctAnswer.orEmpty())
+                        },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (isUserCorrect) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+
+            Button(
+                onClick = onNextClicked,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 48.dp)
+                    .semantics { onClick(label = nextLabel, action = null) },
+            ) {
+                Text(
+                    text = if (uiState.questionNumber >= uiState.totalQuestions) {
+                        stringResource(R.string.quiz_finish_quiz)
+                    } else {
+                        stringResource(R.string.quiz_next_question)
+                    },
+                )
             }
         }
     }

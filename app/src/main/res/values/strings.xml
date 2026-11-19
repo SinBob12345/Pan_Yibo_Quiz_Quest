@@ -56,6 +56,7 @@
     <string name="quiz_seconds_left">%1$d s</string>
     <string name="quiz_feedback_correct">Correct!</string>
     <string name="quiz_feedback_incorrect">Incorrect. Correct answer: %1$s</string>
+    <string name="quiz_feedback_time_up">Time\'s up. The answer was %1$s</string>
     <string name="quiz_next_question">Next question</string>
     <string name="quiz_finish_quiz">See results</string>
     <string name="quiz_leave_dialog_title">Leave this level?</string>

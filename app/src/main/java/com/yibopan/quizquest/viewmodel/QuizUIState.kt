@@ -30,4 +30,6 @@ data class QuizUIState(
     val showReportedMessage: Boolean = false,
     /** When true, animations run with zero duration (A2 Commitment #7). */
     val reduceMotion: Boolean = false,
+    /** True when the timer ran out for the current question. */
+    val isTimeUp: Boolean = false,
 )
