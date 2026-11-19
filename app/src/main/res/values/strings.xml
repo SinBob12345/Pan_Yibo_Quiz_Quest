@@ -151,8 +151,8 @@
     <string name="privacy_send_feedback">Send feedback</string>
 
     <string name="privacy_export_title">Export My Data</string>
-    <string name="privacy_export_desc">Share or save a JSON copy of all your scores and flashcards</string>
-    <string name="privacy_export_button">Export</string>
+    <string name="privacy_export_desc">Save a file with all your scores, answers and review cards.</string>
+    <string name="privacy_export_button">Save a copy</string>
     <string name="privacy_delete_title">Delete All Data</string>
     <string name="privacy_delete_desc">Remove everything QuizQuest has saved on this phone.</string>
     <string name="privacy_delete_button">Delete</string>
@@ -162,7 +162,7 @@
     <string name="privacy_delete_keep">Keep my data</string>
     <string name="privacy_delete_confirm">Delete everything</string>
 
-    <string name="privacy_snackbar_export_ready">Data export generated</string>
+    <string name="privacy_snackbar_export_saved">Your data was saved.</string>
     <string name="privacy_snackbar_deleted">All data deleted successfully</string>
     <string name="privacy_snackbar_failed">Action failed</string>
 </resources>

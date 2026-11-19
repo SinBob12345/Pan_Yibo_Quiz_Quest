@@ -2,6 +2,8 @@ package com.yibopan.quizquest.views
 
 import android.content.Intent
 import android.content.res.Configuration
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,10 +51,13 @@ import com.yibopan.quizquest.viewmodel.PrivacyUIState
 import com.yibopan.quizquest.viewmodel.PrivacyViewModel
 import com.yibopan.quizquest.views.components.AppTopBar
 import org.koin.compose.viewmodel.koinViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * "Privacy & your data" screen (A2 commitments #2 and #4; Lecture 9: data safety & user control).
- * Displays plain-language data policies, attribution (CC BY-SA 4.0), export, deletion, and email feedback.
+ * Displays plain-language data policies, attribution (CC BY-SA 4.0), file export, deletion, and email feedback.
  */
 @Composable
 fun PrivacyScreen(onBackPressed: () -> Unit) {
@@ -61,8 +66,7 @@ fun PrivacyScreen(onBackPressed: () -> Unit) {
     PrivacyScreenContent(
         uiState = privacyUIState,
         onBackPressed = onBackPressed,
-        onExportClicked = { privacyViewModel.prepareExport() },
-        onExportHandled = { privacyViewModel.clearExportJson() },
+        onSaveExport = { uriString -> privacyViewModel.saveExport(uriString) },
         onRequestDeleteClicked = { privacyViewModel.requestDelete() },
         onConfirmDeleteClicked = { privacyViewModel.confirmDelete() },
         onDismissDeleteClicked = { privacyViewModel.dismissDelete() },
@@ -75,8 +79,7 @@ fun PrivacyScreenContent(
     uiState: PrivacyUIState,
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
-    onExportClicked: () -> Unit = {},
-    onExportHandled: () -> Unit = {},
+    onSaveExport: (String) -> Unit = {},
     onRequestDeleteClicked: () -> Unit = {},
     onConfirmDeleteClicked: () -> Unit = {},
     onDismissDeleteClicked: () -> Unit = {},
@@ -85,29 +88,24 @@ fun PrivacyScreenContent(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val exportJson = uiState.exportJson
-    LaunchedEffect(exportJson) {
-        if (exportJson != null) {
-            val sendIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, exportJson)
-                type = "application/json"
-            }
-            val shareIntent = Intent.createChooser(sendIntent, null)
-            context.startActivity(shareIntent)
-            onExportHandled()
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            onSaveExport(uri.toString())
         }
     }
 
     val message = uiState.message
-    val exportReadyMsg = stringResource(R.string.privacy_snackbar_export_ready)
+    val exportSavedMsg = stringResource(R.string.privacy_snackbar_export_saved)
     val deletedMsg = stringResource(R.string.privacy_snackbar_deleted)
     val failedMsg = stringResource(R.string.privacy_snackbar_failed)
 
     LaunchedEffect(message) {
         if (message != null) {
             val text = when (message) {
-                PrivacyMessage.EXPORT_READY -> exportReadyMsg
+                PrivacyMessage.EXPORT_SAVED -> exportSavedMsg
                 PrivacyMessage.DELETED -> deletedMsg
                 PrivacyMessage.FAILED -> failedMsg
             }
@@ -207,7 +205,7 @@ fun PrivacyScreenContent(
 
                 item { HorizontalDivider() }
 
-                // Export My Data Action
+                // Save a Copy / Export File Action
                 item {
                     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                         Row(
@@ -225,7 +223,10 @@ fun PrivacyScreenContent(
                                 Text(text = stringResource(R.string.privacy_export_desc), style = MaterialTheme.typography.bodySmall)
                             }
                             OutlinedButton(
-                                onClick = onExportClicked,
+                                onClick = {
+                                    val todayDate = dateFormat.format(Date())
+                                    launcher.launch("quizquest-export-$todayDate.json")
+                                },
                                 enabled = !uiState.isWorking,
                                 modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                             ) {

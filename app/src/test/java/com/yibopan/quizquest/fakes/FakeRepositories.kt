@@ -1,5 +1,6 @@
 package com.yibopan.quizquest.fakes
 
+import com.yibopan.quizquest.data.export.ExportWriter
 import com.yibopan.quizquest.data.model.AnswerRecord
 import com.yibopan.quizquest.data.model.Category
 import com.yibopan.quizquest.data.model.Difficulty
@@ -22,6 +23,7 @@ import com.yibopan.quizquest.data.sound.SoundPlayer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import java.io.IOException
 
 /**
  * In-memory fake implementations of repository interfaces for ViewModel unit tests (Lecture 4).
@@ -200,5 +202,17 @@ class FakeSoundPlayer : SoundPlayer {
 
     override fun release() {
         released = true
+    }
+}
+
+class FakeExportWriter : ExportWriter {
+    var writtenUri: String? = null
+    var writtenJson: String? = null
+    var shouldFail = false
+
+    override suspend fun write(uriString: String, json: String) {
+        if (shouldFail) throw IOException("Failed to write export file")
+        writtenUri = uriString
+        writtenJson = json
     }
 }

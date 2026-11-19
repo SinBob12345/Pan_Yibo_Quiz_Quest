@@ -11,6 +11,8 @@ import com.yibopan.quizquest.data.database.QuizDatabase
 import com.yibopan.quizquest.data.database.QuizSessionDao
 import com.yibopan.quizquest.data.database.ReviewCardDao
 import com.yibopan.quizquest.data.database.SettingsDao
+import com.yibopan.quizquest.data.export.AndroidExportWriter
+import com.yibopan.quizquest.data.export.ExportWriter
 import com.yibopan.quizquest.data.network.RateLimiter
 import com.yibopan.quizquest.data.network.TriviaAPI
 import com.yibopan.quizquest.data.repository.PrivacyRepository
@@ -65,6 +67,7 @@ val appModules = module {
     single<CoroutineDispatcher> { Dispatchers.IO }
     single<TimeProvider> { SystemTimeProvider }
     single<SoundPlayer> { AndroidSoundPlayer(androidContext()) }
+    single<ExportWriter> { AndroidExportWriter(androidContext(), get()) }
 
     // ----- Pure game rules -----
     single { AnswerShuffler() }
@@ -209,5 +212,5 @@ val appModules = module {
     viewModel { ReviewViewModel(reviewRepository = get(), timeProvider = get()) }
     viewModel { StatsViewModel(statsRepository = get()) }
     viewModel { SettingsViewModel(settingsRepository = get()) }
-    viewModel { PrivacyViewModel(privacyRepository = get()) }
+    viewModel { PrivacyViewModel(privacyRepository = get(), exportWriter = get()) }
 }
