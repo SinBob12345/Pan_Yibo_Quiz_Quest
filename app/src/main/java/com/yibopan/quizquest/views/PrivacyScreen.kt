@@ -1,5 +1,6 @@
 package com.yibopan.quizquest.views
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -33,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -50,6 +52,7 @@ import com.yibopan.quizquest.viewmodel.PrivacyMessage
 import com.yibopan.quizquest.viewmodel.PrivacyUIState
 import com.yibopan.quizquest.viewmodel.PrivacyViewModel
 import com.yibopan.quizquest.views.components.AppTopBar
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -87,6 +90,7 @@ fun PrivacyScreenContent(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
     val launcher = rememberLauncherForActivityResult(
@@ -96,6 +100,10 @@ fun PrivacyScreenContent(
             onSaveExport(uri.toString())
         }
     }
+
+    val feedbackEmail = stringResource(R.string.feedback_email)
+    val feedbackSubject = stringResource(R.string.feedback_subject)
+    val noEmailAppMsg = stringResource(R.string.privacy_no_email_app_snackbar)
 
     val message = uiState.message
     val exportSavedMsg = stringResource(R.string.privacy_snackbar_export_saved)
@@ -288,22 +296,16 @@ fun PrivacyScreenContent(
                             OutlinedButton(
                                 modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                                 onClick = {
-                                    val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                        data = "mailto:support@quizquest.edu.au".toUri()
-                                        putExtra(Intent.EXTRA_SUBJECT, "QuizQuest Feedback")
-                                    }
-                                    try {
-                                        context.startActivity(intent)
-                                    } catch (_: Exception) {
-                                        val fallback = Intent(Intent.ACTION_SEND).apply {
-                                            type = "message/rfc822"
-                                            putExtra(Intent.EXTRA_EMAIL, arrayOf("support@quizquest.edu.au"))
-                                            putExtra(Intent.EXTRA_SUBJECT, "QuizQuest Feedback")
-                                        }
-                                        try {
-                                            context.startActivity(Intent.createChooser(fallback, "Send email"))
-                                        } catch (_: Exception) { }
-                                    }
+                                    sendFeedbackEmail(
+                                        context = context,
+                                        email = feedbackEmail,
+                                        subject = feedbackSubject,
+                                        onNoEmailApp = {
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar(noEmailAppMsg)
+                                            }
+                                        },
+                                    )
                                 },
                             ) {
                                 Icon(imageVector = Icons.Rounded.Email, contentDescription = null)
@@ -313,6 +315,34 @@ fun PrivacyScreenContent(
                     }
                 }
             }
+        }
+    }
+}
+
+private fun sendFeedbackEmail(
+    context: Context,
+    email: String,
+    subject: String,
+    onNoEmailApp: () -> Unit,
+) {
+    val mailUri = "mailto:$email".toUri()
+    val sendToIntent = Intent(Intent.ACTION_SENDTO).apply {
+        data = mailUri
+        putExtra(Intent.EXTRA_SUBJECT, subject)
+    }
+
+    try {
+        context.startActivity(sendToIntent)
+    } catch (_: Exception) {
+        val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+        }
+        try {
+            context.startActivity(Intent.createChooser(fallbackIntent, "Send email"))
+        } catch (_: Exception) {
+            onNoEmailApp()
         }
     }
 }

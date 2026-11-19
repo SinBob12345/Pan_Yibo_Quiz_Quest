@@ -149,6 +149,9 @@
     <string name="privacy_feedback_title">Feedback &amp; Support</string>
     <string name="privacy_feedback_desc">Have questions or suggestions? Send feedback directly to the developers.</string>
     <string name="privacy_send_feedback">Send feedback</string>
+    <string name="feedback_email">yibo.pan@my.jcu.edu.au</string>
+    <string name="feedback_subject">QuizQuest feedback</string>
+    <string name="privacy_no_email_app_snackbar">No email app found on this phone.</string>
 
     <string name="privacy_export_title">Export My Data</string>
     <string name="privacy_export_desc">Save a file with all your scores, answers and review cards.</string>
