@@ -37,7 +37,10 @@ class MainViewModel(
     }
 
     /** Resolves whether dark theme should be enabled based on current [ThemeMode] and system dark mode state. */
-    fun shouldEnableDarkTheme(systemInDark: Boolean): Boolean = when (_uiState.value.themeMode) {
+    fun shouldEnableDarkTheme(systemInDark: Boolean): Boolean = shouldEnableDarkTheme(_uiState.value.themeMode, systemInDark)
+
+    /** Resolves whether dark theme should be enabled for the given [themeMode] and [systemInDark] state. */
+    fun shouldEnableDarkTheme(themeMode: ThemeMode, systemInDark: Boolean): Boolean = when (themeMode) {
         ThemeMode.SYSTEM -> systemInDark
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true

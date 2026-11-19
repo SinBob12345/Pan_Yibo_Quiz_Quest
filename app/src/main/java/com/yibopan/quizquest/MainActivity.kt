@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yibopan.quizquest.navigation.AppNavigation
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
@@ -19,10 +20,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val mainViewModel: MainViewModel = koinViewModel()
-            mainViewModel.uiState.collectAsStateWithLifecycle()
+            val mainUIState by mainViewModel.uiState.collectAsStateWithLifecycle()
 
             val systemInDark = isSystemInDarkTheme()
-            val darkTheme = mainViewModel.shouldEnableDarkTheme(systemInDark)
+            val darkTheme = mainViewModel.shouldEnableDarkTheme(mainUIState.themeMode, systemInDark)
 
             // Dynamic color stays off to preserve contrast guarantees (A2 Commitment #7)
             QuizQuestTheme(darkTheme = darkTheme, dynamicColor = false) {
