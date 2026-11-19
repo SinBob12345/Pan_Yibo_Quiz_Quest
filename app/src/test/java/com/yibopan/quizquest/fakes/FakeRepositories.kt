@@ -177,6 +177,7 @@ class FakePrivacyRepository : PrivacyRepository {
     var exportJsonString: String = "{\"data\": \"export\"}"
     var deleteAllDataCalled = false
     var deleteExpiredAnswersResult = 0
+    var deleteExpiredAnswersCount = 0
 
     override suspend fun exportAllDataAsJson(): String = exportJsonString
 
@@ -184,7 +185,10 @@ class FakePrivacyRepository : PrivacyRepository {
         deleteAllDataCalled = true
     }
 
-    override suspend fun deleteExpiredAnswers(nowMillis: Long): Int = deleteExpiredAnswersResult
+    override suspend fun deleteExpiredAnswers(nowMillis: Long): Int {
+        deleteExpiredAnswersCount++
+        return deleteExpiredAnswersResult
+    }
 }
 
 class FakeSoundPlayer : SoundPlayer {

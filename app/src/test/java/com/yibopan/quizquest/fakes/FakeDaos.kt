@@ -58,14 +58,16 @@ class FakeQuestionDao(
             it.categoryId == categoryId &&
                 it.difficulty == difficulty &&
                 it.text !in flaggedTexts
-        }.take(amount)
+        }.shuffled().take(amount)
     }
 
     override suspend fun insertAll(questions: List<QuestionEntity>) {
-        val withIds = questions.map {
+        val newQuestions = questions.filterNot { q ->
+            this.questions.any { existing -> existing.categoryId == q.categoryId && existing.text == q.text }
+        }.map {
             if (it.id == 0L) it.copy(id = nextId++) else it
         }
-        this.questions.addAll(withIds)
+        this.questions.addAll(newQuestions)
     }
 
     override suspend fun markAsUsed(ids: List<Long>) {

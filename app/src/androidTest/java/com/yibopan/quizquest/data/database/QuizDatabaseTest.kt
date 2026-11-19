@@ -71,6 +71,21 @@ class QuizDatabaseTest {
     }
 
     @Test
+    fun reinsertingExistingQuestionPreservesUsedState() = runBlocking {
+        val questionDao = db.questionDao()
+        val q1 = QuestionEntity(id = 1L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Q1", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 1000L, used = false)
+        questionDao.insertAll(listOf(q1))
+        questionDao.markAsUsed(listOf(1L))
+
+        // Re-insert the same question with unique (categoryId, text) index using OnConflictStrategy.IGNORE
+        val reinsertedQ1 = QuestionEntity(id = 0L, categoryId = 17, difficulty = "easy", type = "multiple", text = "Q1", correctAnswer = "A", incorrectAnswers = listOf("B"), fetchedAt = 2000L, used = false)
+        questionDao.insertAll(listOf(reinsertedQ1))
+
+        val unused = questionDao.getUnusedQuestions(categoryId = 17, difficulty = "easy", amount = 10)
+        assertTrue(unused.isEmpty())
+    }
+
+    @Test
     fun getUnusedQuestionsFiltersOutUsedAndFlaggedQuestions() = runBlocking {
         val questionDao = db.questionDao()
         val flaggedDao = db.flaggedQuestionDao()

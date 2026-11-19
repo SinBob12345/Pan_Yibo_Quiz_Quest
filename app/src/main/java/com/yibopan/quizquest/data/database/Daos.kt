@@ -26,10 +26,10 @@ interface QuestionDao {
     @Query("SELECT * FROM Question WHERE categoryId = :categoryId AND difficulty = :difficulty AND text NOT IN (SELECT questionText FROM FlaggedQuestion) AND used = 0 LIMIT :amount")
     suspend fun getUnusedQuestions(categoryId: Int, difficulty: String, amount: Int): List<QuestionEntity>
 
-    @Query("SELECT * FROM Question WHERE categoryId = :categoryId AND difficulty = :difficulty AND text NOT IN (SELECT questionText FROM FlaggedQuestion) LIMIT :amount")
+    @Query("SELECT * FROM Question WHERE categoryId = :categoryId AND difficulty = :difficulty AND text NOT IN (SELECT questionText FROM FlaggedQuestion) ORDER BY RANDOM() LIMIT :amount")
     suspend fun getQuestions(categoryId: Int, difficulty: String, amount: Int): List<QuestionEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(questions: List<QuestionEntity>)
 
     @Query("UPDATE Question SET used = 1 WHERE id IN (:ids)")
