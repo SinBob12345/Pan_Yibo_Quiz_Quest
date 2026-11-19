@@ -6,7 +6,6 @@ import com.yibopan.quizquest.data.repository.ProgressRepository
 import com.yibopan.quizquest.data.repository.SettingsRepository
 import com.yibopan.quizquest.data.rules.DailyGoalTracker
 import com.yibopan.quizquest.data.rules.LevelPolicy
-import com.yibopan.quizquest.data.rules.StarRating
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,14 +53,19 @@ class ResultViewModel(
                 progressRepository.getQuizResult(sessionId),
                 progressRepository.getLevelsCompletedSince(startOfDay),
                 settingsRepository.getSettings(),
-            ) { result, levelsCompletedToday, settings ->
+                progressRepository.getLevelProgress(categoryId),
+            ) { result, levelsCompletedToday, settings, progressList ->
                 val currentCategory = result?.categoryId ?: categoryId
                 val currentLevel = result?.level ?: level
                 val correctCount = result?.correctCount ?: 0
                 val totalCount = result?.totalCount ?: 0
-                val stars = result?.stars ?: 0
+                val currentAttemptStars = result?.stars ?: 0
 
-                val isNextUnlocked = stars >= StarRating.PASS_STARS && currentLevel < LevelPolicy.LEVELS_PER_WORLD
+                val storedProgress = progressList.find { it.level == currentLevel }
+                val storedStars = storedProgress?.stars ?: 0
+                val bestStars = maxOf(currentAttemptStars, storedStars)
+
+                val isNextUnlocked = LevelPolicy.isNextLevelUnlocked(currentLevel, bestStars)
                 val goalReached = DailyGoalTracker.isGoalReached(levelsCompletedToday, settings.dailyGoalLevels)
 
                 ResultUIState(
@@ -70,7 +74,7 @@ class ResultViewModel(
                     level = currentLevel,
                     correctCount = correctCount,
                     totalCount = totalCount,
-                    stars = stars,
+                    stars = currentAttemptStars,
                     isNextLevelUnlocked = isNextUnlocked,
                     isDailyGoalReached = goalReached,
                     reduceMotion = settings.reduceMotion,

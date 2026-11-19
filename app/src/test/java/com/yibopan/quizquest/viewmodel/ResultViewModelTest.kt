@@ -64,6 +64,28 @@ class ResultViewModelTest {
     }
 
     @Test
+    fun `isNextLevelUnlocked is true when stored progress earned 3 stars even if current attempt has 0 stars`() = runTest {
+        val previousResult = QuizResult(0L, 17, 2, 10, 10, 3, 1000L, 10000L)
+        progressRepo.saveQuizResult(previousResult, emptyList())
+
+        val currentResult = QuizResult(0L, 17, 2, 2, 10, 0, 2000L, 10000L)
+        val sessionId = progressRepo.saveQuizResult(currentResult, emptyList())
+
+        val viewModel = ResultViewModel(
+            sessionId = sessionId,
+            categoryId = 17,
+            level = 2,
+            progressRepository = progressRepo,
+            settingsRepository = settingsRepo,
+            timeProvider = { 3000L },
+        )
+
+        val state = viewModel.uiState.value
+        assertEquals(0, state.stars)
+        assertTrue(state.isNextLevelUnlocked)
+    }
+
+    @Test
     fun `isNextLevelUnlocked is false when completing final level 9`() = runTest {
         val result = QuizResult(
             sessionId = 0L,

@@ -34,4 +34,12 @@ object LevelPolicy {
         if (level == 1) return true
         return previousLevelStars != null && previousLevelStars >= StarRating.PASS_STARS
     }
+
+    /**
+     * Returns true if the next level after [currentLevel] is unlocked based on [bestStars] earned for the current level.
+     */
+    fun isNextLevelUnlocked(currentLevel: Int, bestStars: Int): Boolean {
+        if (currentLevel >= LEVELS_PER_WORLD) return false
+        return bestStars >= StarRating.PASS_STARS
+    }
 }
