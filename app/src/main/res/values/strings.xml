@@ -18,7 +18,6 @@
     <string name="common_cancel">Cancel</string>
     <string name="action_retry">Try again</string>
     <string name="state_loading">Loading</string>
-    <string name="stage_notice_title">Coming in stage %1$d</string>
 
     <!-- Click labels (Lecture 3: TalkBack says "Double tap to …") -->
     <string name="click_label_open_world">open this world</string>

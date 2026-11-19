@@ -8,7 +8,7 @@ import org.koin.core.context.startKoin
 /**
  * Application class (Lecture 4). Registered in AndroidManifest.xml with android:name.
  *
- * Stage 7 adds a one-off clean-up of old answer records here (data-retention rule, A2 slide 25).
+ * Retention clean-up of old answer records runs in [com.yibopan.quizquest.viewmodel.MainViewModel] on app startup (A2 Commitment #2).
  */
 class QuizQuestApplication : Application() {
 
