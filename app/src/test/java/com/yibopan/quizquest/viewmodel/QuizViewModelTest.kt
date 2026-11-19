@@ -28,7 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.random.Random
 
-/** Unit tests for [QuizViewModel] including timer, question reporting, sound, and session saving rules (Lecture 5). */
+/** Unit tests for [QuizViewModel] including timer, question reporting, sound, error recovery, and session saving rules (Lecture 5). */
 @OptIn(ExperimentalCoroutinesApi::class)
 class QuizViewModelTest {
 
@@ -318,5 +318,39 @@ class QuizViewModelTest {
 
         val secondsAfterHint = viewModel.uiState.value.secondsLeft
         assertEquals(secondsBeforeHint, secondsAfterHint)
+    }
+
+    @Test
+    fun `failed saveSession sets saveFailed to true and allows retrySave`() = runTest {
+        progressRepo.shouldFail = true
+
+        val viewModel = QuizViewModel(
+            categoryId = 17,
+            level = 1,
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
+            quizEngine = quizEngine,
+            timeProvider = { 1000L },
+        )
+
+        viewModel.selectAnswer("Paris")
+        viewModel.nextQuestion()
+        viewModel.selectAnswer("WrongChoice")
+        viewModel.nextQuestion() // Finish quiz -> triggers saveSession()
+
+        val failedState = viewModel.uiState.value
+        assertTrue(failedState.saveFailed)
+        assertNull(failedState.finishedSessionId)
+
+        // Resolve failure and retry save
+        progressRepo.shouldFail = false
+        viewModel.retrySave()
+
+        val successState = viewModel.uiState.value
+        assertFalse(successState.saveFailed)
+        assertNotNull(successState.finishedSessionId)
+        assertEquals(1L, successState.finishedSessionId)
     }
 }

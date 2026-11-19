@@ -32,4 +32,6 @@ data class QuizUIState(
     val reduceMotion: Boolean = false,
     /** True when the timer ran out for the current question. */
     val isTimeUp: Boolean = false,
+    /** True when Room saving failed, offering the learner a retry button. */
+    val saveFailed: Boolean = false,
 )

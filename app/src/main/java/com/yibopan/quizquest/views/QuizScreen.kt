@@ -107,6 +107,7 @@ fun QuizScreen(
         onReportedMessageShown = { quizViewModel.reportedMessageShown() },
         onNextClicked = { quizViewModel.nextQuestion() },
         onRetryClicked = { quizViewModel.retry() },
+        onRetrySaveClicked = { quizViewModel.retrySave() },
         windowSizeClass = windowSizeClass,
     )
 }
@@ -122,6 +123,7 @@ fun QuizScreenContent(
     onReportedMessageShown: () -> Unit = {},
     onNextClicked: () -> Unit = {},
     onRetryClicked: () -> Unit = {},
+    onRetrySaveClicked: () -> Unit = {},
     windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass,
 ) {
     var showLeaveDialog by remember { mutableStateOf(false) }
@@ -130,7 +132,7 @@ fun QuizScreenContent(
     val snackbarHostState = remember { SnackbarHostState() }
     val reportedSnackbarMsg = stringResource(R.string.quiz_reported_snackbar)
 
-    val isQuizInProgress = uiState.questionNumber > 0 && !uiState.isLoading && uiState.error == null && uiState.finishedSessionId == null
+    val isQuizInProgress = uiState.questionNumber > 0 && !uiState.isLoading && uiState.error == null && !uiState.saveFailed && uiState.finishedSessionId == null
     val isExpanded = windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.EXPANDED
 
     LaunchedEffect(uiState.showReportedMessage) {
@@ -274,14 +276,15 @@ fun QuizScreenContent(
                 LoadingState()
             }
 
-            // Lecture 5 & Lecture 9: AnimatedVisibility for friendly error state
+            // Lecture 5 & Lecture 9: AnimatedVisibility for friendly error or save failure state
             AnimatedVisibility(
-                visible = !uiState.isLoading && uiState.error != null,
+                visible = !uiState.isLoading && (uiState.error != null || uiState.saveFailed),
                 enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)),
                 exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
             ) {
-                val (errorMsg, retryAction) = when (uiState.error) {
-                    QuizError.ALL_REPORTED -> stringResource(R.string.quiz_error_all_reported) to null
+                val (errorMsg, retryAction) = when {
+                    uiState.saveFailed -> stringResource(R.string.quiz_error_save_failed) to onRetrySaveClicked
+                    uiState.error == QuizError.ALL_REPORTED -> stringResource(R.string.quiz_error_all_reported) to null
                     else -> stringResource(R.string.quiz_error_friendly) to onRetryClicked
                 }
                 ErrorState(
@@ -292,7 +295,7 @@ fun QuizScreenContent(
 
             // Lecture 5: AnimatedVisibility for question content state
             AnimatedVisibility(
-                visible = !uiState.isLoading && uiState.error == null && uiState.totalQuestions > 0,
+                visible = !uiState.isLoading && uiState.error == null && !uiState.saveFailed && uiState.totalQuestions > 0,
                 enter = if (uiState.reduceMotion) fadeIn(animationSpec = snap()) else fadeIn(animationSpec = tween(200)),
                 exit = if (uiState.reduceMotion) fadeOut(animationSpec = snap()) else fadeOut(animationSpec = tween(200)),
             ) {

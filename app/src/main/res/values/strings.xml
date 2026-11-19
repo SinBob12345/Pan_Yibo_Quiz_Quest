@@ -68,6 +68,7 @@
     <string name="quiz_report_dialog_confirm">Report</string>
     <string name="quiz_error_friendly">Unable to load questions. Please check your network connection and try again.</string>
     <string name="quiz_error_all_reported">All questions in this level were reported. Please try another level.</string>
+    <string name="quiz_error_save_failed">Your result could not be saved.</string>
     <string name="quiz_reported_snackbar">Thanks – this question is now hidden on this phone.</string>
     <string name="quiz_state_correct_answer">Correct answer</string>
     <string name="quiz_state_your_wrong_answer">Your answer, incorrect</string>

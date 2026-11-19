@@ -72,6 +72,12 @@ class QuizViewModel(
         loadQuestions()
     }
 
+    fun retrySave() {
+        _uiState.update { it.copy(saveFailed = false) }
+        isSaving = false
+        saveSession()
+    }
+
     private fun loadQuestions() {
         viewModelScope.launch {
             userSettings = settingsRepository.getSettings().first()
@@ -228,9 +234,10 @@ class QuizViewModel(
     }
 
     private fun saveSession() {
-        if (isSaving) return
+        if (isSaving && !_uiState.value.saveFailed) return
         isSaving = true
         stopTimer()
+        _uiState.update { it.copy(saveFailed = false) }
 
         val durationMs = timeProvider.now() - sessionStartTime
         val stars = StarRating.starsFor(quizState.correctCount, quizState.questions.size)
@@ -246,10 +253,16 @@ class QuizViewModel(
         )
 
         viewModelScope.launch {
-            val sessionId = progressRepository.saveQuizResult(quizResult, quizState.answers)
-            reviewRepository.addWrongAnswers(quizState.answers, nowMillis = timeProvider.now())
-            AppLog.d(TAG, "Quiz session saved with ID $sessionId: ${quizState.correctCount}/${quizState.questions.size} correct ($stars stars)")
-            _uiState.update { it.copy(finishedSessionId = sessionId) }
+            try {
+                val sessionId = progressRepository.saveQuizResult(quizResult, quizState.answers)
+                reviewRepository.addWrongAnswers(quizState.answers, nowMillis = timeProvider.now())
+                AppLog.d(TAG, "Quiz session saved with ID $sessionId: ${quizState.correctCount}/${quizState.questions.size} correct ($stars stars)")
+                _uiState.update { it.copy(finishedSessionId = sessionId, saveFailed = false) }
+            } catch (e: Exception) {
+                AppLog.e(TAG, "Failed to save quiz session result", e)
+                isSaving = false
+                _uiState.update { it.copy(saveFailed = true) }
+            }
         }
     }
 

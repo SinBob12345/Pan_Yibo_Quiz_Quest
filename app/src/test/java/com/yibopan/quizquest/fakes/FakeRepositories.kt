@@ -60,12 +60,14 @@ class FakeProgressRepository : ProgressRepository {
     val levelProgressFlow = MutableStateFlow<List<LevelProgress>>(emptyList())
     val quizResultsState = MutableStateFlow<Map<Long, QuizResult>>(emptyMap())
     private var nextSessionId = 1L
+    var shouldFail = false
 
     override suspend fun getLevelProgress(categoryId: Int): Flow<List<LevelProgress>> {
         return levelProgressFlow.map { list -> list.filter { it.categoryId == categoryId } }
     }
 
     override suspend fun saveQuizResult(result: QuizResult, answers: List<AnswerRecord>): Long {
+        if (shouldFail) throw IllegalStateException("Database error while saving quiz result")
         val id = if (result.sessionId == 0L) nextSessionId++ else result.sessionId
         val savedResult = result.copy(sessionId = id)
         quizResultsState.value = quizResultsState.value + (id to savedResult)
