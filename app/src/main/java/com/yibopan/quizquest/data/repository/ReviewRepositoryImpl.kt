@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 /**
  * Manages flashcard review cards scheduled with [LeitnerScheduler] (Lecture 7).
  *
- * New cards start in Leitner box 1.
+ * New cards start in Leitner box 1 and are immediately due for review upon creation/wrong test answers.
  */
 class ReviewRepositoryImpl(
     private val reviewCardDao: ReviewCardDao,
@@ -36,7 +36,7 @@ class ReviewRepositoryImpl(
         val wrong = answers.filter { !it.isCorrect }
         for (answer in wrong) {
             val existing = reviewCardDao.getCardByQuestionText(answer.questionText)
-            val nextReview = LeitnerScheduler.nextReviewAt(LeitnerScheduler.MIN_BOX, nowMillis)
+            val nextReview = nowMillis // Wrong quiz answers are due immediately for review
             if (existing != null) {
                 val updated = existing.copy(
                     box = LeitnerScheduler.MIN_BOX,
@@ -62,7 +62,11 @@ class ReviewRepositoryImpl(
     override suspend fun updateCard(card: ReviewCard, correct: Boolean, nowMillis: Long): Unit = withContext(dispatcher) {
         val entity = reviewCardDao.getById(card.id) ?: return@withContext
         val nextBox = LeitnerScheduler.nextBox(card.box, correct)
-        val nextReview = LeitnerScheduler.nextReviewAt(nextBox, nowMillis)
+        val nextReview = if (correct) {
+            LeitnerScheduler.nextReviewAt(nextBox, nowMillis)
+        } else {
+            nowMillis // Unmastered "Not yet" cards stay due for immediate review
+        }
         val timesWrong = if (correct) card.timesWrong else card.timesWrong + 1
 
         val updatedEntity = entity.copy(

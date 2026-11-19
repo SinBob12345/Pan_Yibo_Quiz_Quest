@@ -36,11 +36,13 @@ class ReviewViewModel(
         collectJob = viewModelScope.launch {
             val now = timeProvider.now()
             reviewRepository.getDueCards(now).collect { cards ->
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    val newCurrent = cards.firstOrNull()
+                    val isSameCard = (state.currentCard?.id == newCurrent?.id && state.currentCard != null)
+                    state.copy(
                         isLoading = false,
                         dueCards = cards,
-                        isAnswerRevealed = false,
+                        isAnswerRevealed = if (isSameCard) state.isAnswerRevealed else false,
                     )
                 }
             }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -37,7 +38,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
-            timeProvider = { now + 90_000_000L },
+            timeProvider = { now },
         )
 
         val state = viewModel.uiState.value
@@ -56,7 +57,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
-            timeProvider = { now + 90_000_000L },
+            timeProvider = { now },
         )
 
         viewModel.showAnswer()
@@ -77,7 +78,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
-            timeProvider = { now + 90_000_000L },
+            timeProvider = { now },
         )
 
         // Card 1
@@ -103,6 +104,49 @@ class ReviewViewModelTest {
     }
 
     @Test
+    fun `onNotYet keeps unmastered card in review queue`() = runTest {
+        reviewRepo.addWrongAnswers(
+            listOf(AnswerRecord("Difficult Q", "B", "A", false, 1000L)),
+            nowMillis = now,
+        )
+
+        val viewModel = ReviewViewModel(
+            reviewRepository = reviewRepo,
+            timeProvider = { now },
+        )
+
+        viewModel.showAnswer()
+        viewModel.onNotYet()
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.dueCards.size)
+        assertNotNull(state.currentCard)
+        assertEquals("Difficult Q", state.currentCard?.questionText)
+    }
+
+    @Test
+    fun `refresh preserves isAnswerRevealed when app resumes on same card`() = runTest {
+        reviewRepo.addWrongAnswers(
+            listOf(AnswerRecord("Active Q", "B", "A", false, 1000L)),
+            nowMillis = now,
+        )
+
+        val viewModel = ReviewViewModel(
+            reviewRepository = reviewRepo,
+            timeProvider = { now },
+        )
+
+        viewModel.showAnswer()
+        assertTrue(viewModel.uiState.value.isAnswerRevealed)
+
+        // Simulate app switching to background and returning to foreground (lifecycle resume refresh)
+        viewModel.refresh()
+
+        assertTrue(viewModel.uiState.value.isAnswerRevealed)
+        assertEquals("Active Q", viewModel.uiState.value.currentCard?.questionText)
+    }
+
+    @Test
     fun `calling onKnewIt twice quickly updates the card only once`() = runTest {
         reviewRepo.addWrongAnswers(
             listOf(AnswerRecord("Wrong Q", "B", "A", false, 1000L)),
@@ -111,7 +155,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
-            timeProvider = { now + 90_000_000L },
+            timeProvider = { now },
         )
 
         viewModel.showAnswer()
@@ -119,28 +163,5 @@ class ReviewViewModelTest {
         viewModel.onKnewIt() // Second rapid call ignored
 
         assertEquals(1, viewModel.uiState.value.reviewedThisSession)
-    }
-
-    @Test
-    fun `refresh updates due cards when time advances`() = runTest {
-        var mockTime = now
-        reviewRepo.addWrongAnswers(
-            listOf(AnswerRecord("Tomorrow Q", "B", "A", false, 1000L)),
-            nowMillis = now,
-        )
-
-        // At initial time (now), nextReviewAt is set to now + 1 day, so it is NOT due yet
-        val viewModel = ReviewViewModel(
-            reviewRepository = reviewRepo,
-            timeProvider = { mockTime },
-        )
-
-        assertNull(viewModel.uiState.value.currentCard)
-
-        // Advance time by 1 day and call refresh()
-        mockTime += 86_400_000L + 1000L
-        viewModel.refresh()
-
-        assertEquals("Tomorrow Q", viewModel.uiState.value.currentCard?.questionText)
     }
 }

@@ -119,11 +119,12 @@ class FakeReviewRepository : ReviewRepository {
 
         for (answer in wrong) {
             val existingIndex = currentCards.indexOfFirst { it.questionText == answer.questionText }
+            val nextReview = nowMillis // Immediately due for review
             if (existingIndex >= 0) {
                 val existing = currentCards[existingIndex]
                 currentCards[existingIndex] = existing.copy(
                     box = LeitnerScheduler.MIN_BOX,
-                    nextReviewAt = LeitnerScheduler.nextReviewAt(LeitnerScheduler.MIN_BOX, nowMillis),
+                    nextReviewAt = nextReview,
                     timesWrong = existing.timesWrong + 1,
                 )
             } else {
@@ -133,7 +134,7 @@ class FakeReviewRepository : ReviewRepository {
                         questionText = answer.questionText,
                         correctAnswer = answer.correctAnswer,
                         box = LeitnerScheduler.MIN_BOX,
-                        nextReviewAt = LeitnerScheduler.nextReviewAt(LeitnerScheduler.MIN_BOX, nowMillis),
+                        nextReviewAt = nextReview,
                         timesWrong = 1,
                     ),
                 )
@@ -144,7 +145,11 @@ class FakeReviewRepository : ReviewRepository {
 
     override suspend fun updateCard(card: ReviewCard, correct: Boolean, nowMillis: Long) {
         val nextBox = LeitnerScheduler.nextBox(card.box, correct)
-        val nextReview = LeitnerScheduler.nextReviewAt(nextBox, nowMillis)
+        val nextReview = if (correct) {
+            LeitnerScheduler.nextReviewAt(nextBox, nowMillis)
+        } else {
+            nowMillis // Unmastered "Not yet" cards stay due for immediate review
+        }
         val timesWrong = if (correct) card.timesWrong else card.timesWrong + 1
 
         val updated = card.copy(
