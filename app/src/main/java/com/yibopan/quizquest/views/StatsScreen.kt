@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -37,7 +38,6 @@ import com.yibopan.quizquest.R
 import com.yibopan.quizquest.data.model.CategoryAccuracy
 import com.yibopan.quizquest.data.model.DailyActivity
 import com.yibopan.quizquest.data.model.QuizResult
-import com.yibopan.quizquest.data.model.SampleData
 import com.yibopan.quizquest.data.model.StatsSummary
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
 import com.yibopan.quizquest.viewmodel.StatsUIState
@@ -75,6 +75,9 @@ fun StatsScreenContent(
 ) {
     val isTwoPane = windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
     val summary = uiState.summary
+    val categoryNameMap = remember(summary.byCategory) {
+        summary.byCategory.associate { it.categoryId to it.categoryName }
+    }
 
     Scaffold(
         modifier = modifier.testTag(TestTags.SCREEN_STATS),
@@ -136,7 +139,7 @@ fun StatsScreenContent(
                             )
                         }
                         items(summary.recentResults, key = { it.sessionId }) { result ->
-                            RecentResultRow(result = result)
+                            RecentResultRow(result = result, categoryNameMap = categoryNameMap)
                         }
                     }
                 }
@@ -182,7 +185,7 @@ fun StatsScreenContent(
                         )
                     }
                     items(summary.recentResults, key = { it.sessionId }) { result ->
-                        RecentResultRow(result = result)
+                        RecentResultRow(result = result, categoryNameMap = categoryNameMap)
                     }
                 }
             }
@@ -313,8 +316,9 @@ private fun Last7DaysCard(activities: List<DailyActivity>) {
 }
 
 @Composable
-private fun RecentResultRow(result: QuizResult) {
-    val worldName = SampleData.worldName(result.categoryId).ifBlank { "World ${result.categoryId}" }
+private fun RecentResultRow(result: QuizResult, categoryNameMap: Map<Int, String> = emptyMap()) {
+    val worldName = categoryNameMap[result.categoryId]
+        ?: stringResource(R.string.stats_unknown_world, result.categoryId)
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()

@@ -13,7 +13,7 @@ data class LevelItem(
 /** Everything the World map screen shows. */
 data class WorldMapUIState(
     val categoryId: Int,
-    val worldName: String = "",
+    val worldName: String? = null,
     val isLoading: Boolean = false,
     val levels: List<LevelItem> = emptyList(),
 )

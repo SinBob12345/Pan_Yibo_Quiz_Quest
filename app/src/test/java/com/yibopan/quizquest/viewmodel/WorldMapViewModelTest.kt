@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -57,6 +58,19 @@ class WorldMapViewModelTest {
             assertEquals(i + 1, item.level)
             assertFalse(item.unlocked)
         }
+    }
+
+    @Test
+    fun `unknown category id sets worldName to null`() = runTest {
+        val viewModel = WorldMapViewModel(
+            categoryId = 999,
+            progressRepository = progressRepository,
+            triviaRepository = triviaRepository,
+        )
+
+        val state = viewModel.uiState.value
+        assertEquals(999, state.categoryId)
+        assertNull(state.worldName)
     }
 
     @Test

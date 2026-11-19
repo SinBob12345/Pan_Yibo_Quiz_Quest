@@ -69,11 +69,13 @@ fun WorldMapScreenContent(
     onLevelClicked: (level: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val titleText = uiState.worldName ?: stringResource(R.string.stats_unknown_world, uiState.categoryId)
+
     Scaffold(
         modifier = modifier.testTag(TestTags.SCREEN_WORLD_MAP),
         topBar = {
             AppTopBar(
-                title = uiState.worldName.ifBlank { stringResource(R.string.world_map_title) },
+                title = titleText,
                 onBackPressed = onBackPressed,
             )
         },

@@ -106,6 +106,7 @@
     <string name="stats_recent_item_desc">%1$s Level %2$d · %3$d/%4$d correct</string>
     <string name="stats_accuracy_item_state">%1$s: %2$d%% accuracy (%3$d of %4$d correct)</string>
     <string name="stats_daily_item_state">%1$s: %2$d questions answered</string>
+    <string name="stats_unknown_world">World %1$d</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_sound_title">Sound effects</string>

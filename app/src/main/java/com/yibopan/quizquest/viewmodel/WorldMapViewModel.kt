@@ -2,7 +2,6 @@ package com.yibopan.quizquest.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yibopan.quizquest.data.model.SampleData
 import com.yibopan.quizquest.data.repository.ProgressRepository
 import com.yibopan.quizquest.data.repository.TriviaRepository
 import com.yibopan.quizquest.data.rules.LevelPolicy
@@ -26,7 +25,7 @@ class WorldMapViewModel(
     private val _uiState = MutableStateFlow(
         WorldMapUIState(
             categoryId = categoryId,
-            worldName = SampleData.worldName(categoryId),
+            worldName = null,
             isLoading = true,
         ),
     )
@@ -43,7 +42,6 @@ class WorldMapViewModel(
                 progressRepository.getLevelProgress(categoryId),
             ) { categories, progressList ->
                 val categoryName = categories.find { it.id == categoryId }?.name
-                    ?: SampleData.worldName(categoryId)
 
                 val progressByLevel = progressList.associateBy { it.level }
 
