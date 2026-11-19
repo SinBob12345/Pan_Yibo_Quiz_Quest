@@ -38,11 +38,13 @@ class FakeTriviaRepository : TriviaRepository {
     var questionsResult: NetworkResult<List<Question>> = NetworkResult.Success(emptyList())
     val flaggedQuestions = mutableListOf<String>()
     var fetchRemoteCategoriesCalled = false
+    var fetchRemoteCategoriesCount = 0
 
     override suspend fun getCategories(): Flow<List<Category>> = categoriesFlow
 
     override suspend fun fetchRemoteCategories() {
         fetchRemoteCategoriesCalled = true
+        fetchRemoteCategoriesCount++
     }
 
     override suspend fun loadQuestions(

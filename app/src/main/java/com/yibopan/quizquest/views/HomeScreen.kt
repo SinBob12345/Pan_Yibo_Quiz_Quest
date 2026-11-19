@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -45,6 +46,7 @@ import com.yibopan.quizquest.ui.theme.QuizQuestTheme
 import com.yibopan.quizquest.viewmodel.HomeUIState
 import com.yibopan.quizquest.viewmodel.HomeViewModel
 import com.yibopan.quizquest.views.components.AppTopBar
+import com.yibopan.quizquest.views.components.LoadingState
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -63,6 +65,7 @@ fun HomeScreen(
         uiState = homeUIState,
         onWorldClicked = onWorldClicked,
         onReviewClicked = onReviewClicked,
+        onRetryClicked = { homeViewModel.retry() },
     )
 }
 
@@ -73,6 +76,7 @@ fun HomeScreenContent(
     onWorldClicked: (categoryId: Int) -> Unit,
     onReviewClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    onRetryClicked: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.testTag(TestTags.SCREEN_HOME),
@@ -108,12 +112,60 @@ fun HomeScreenContent(
                     )
                 }
             }
-            items(uiState.worlds, key = { it.id }) { world ->
-                WorldListItem(
-                    world = world,
-                    onClick = { onWorldClicked(world.id) },
-                    modifier = Modifier.widthIn(max = 600.dp),
-                )
+            if (uiState.isLoading) {
+                item {
+                    LoadingState(modifier = Modifier.padding(vertical = 24.dp))
+                }
+            } else if (uiState.worldsUnavailable) {
+                item {
+                    WorldsUnavailableCard(
+                        isRetrying = uiState.isRetrying,
+                        onRetry = onRetryClicked,
+                        modifier = Modifier.widthIn(max = 600.dp),
+                    )
+                }
+            } else {
+                items(uiState.worlds, key = { it.id }) { world ->
+                    WorldListItem(
+                        world = world,
+                        onClick = { onWorldClicked(world.id) },
+                        modifier = Modifier.widthIn(max = 600.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorldsUnavailableCard(
+    isRetrying: Boolean,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.home_error_worlds_unavailable),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Button(
+                onClick = onRetry,
+                enabled = !isRetrying,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 48.dp),
+            ) {
+                Text(text = stringResource(R.string.action_retry))
             }
         }
     }
@@ -224,7 +276,7 @@ private fun WorldListItem(world: Category, onClick: () -> Unit, modifier: Modifi
 fun HomeScreenPreview() {
     QuizQuestTheme {
         HomeScreenContent(
-            uiState = HomeUIState(worlds = SampleData.worlds, isDailyGoalReached = true, dueReviewCount = 4),
+            uiState = HomeUIState(isLoading = false, worlds = SampleData.worlds, isDailyGoalReached = true, dueReviewCount = 4),
             onWorldClicked = {},
             onReviewClicked = {},
         )

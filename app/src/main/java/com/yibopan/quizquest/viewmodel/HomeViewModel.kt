@@ -2,7 +2,6 @@ package com.yibopan.quizquest.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yibopan.quizquest.data.model.SampleData
 import com.yibopan.quizquest.data.repository.ProgressRepository
 import com.yibopan.quizquest.data.repository.ReviewRepository
 import com.yibopan.quizquest.data.repository.SettingsRepository
@@ -11,9 +10,12 @@ import com.yibopan.quizquest.data.repository.TriviaRepository
 import com.yibopan.quizquest.data.rules.DailyGoalTracker
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
+import com.yibopan.quizquest.util.AppLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.TimeZone
 
@@ -31,6 +33,10 @@ class HomeViewModel(
     private val settingsRepository: SettingsRepository,
     private val timeProvider: TimeProvider = SystemTimeProvider,
 ) : ViewModel() {
+
+    private companion object {
+        private const val TAG = "HomeViewModel"
+    }
 
     private val _uiState = MutableStateFlow(HomeUIState(isLoading = true))
     val uiState: StateFlow<HomeUIState> get() = _uiState
@@ -57,7 +63,9 @@ class HomeViewModel(
 
                 HomeUIState(
                     isLoading = false,
-                    worlds = if (worlds.isNotEmpty()) worlds else SampleData.worlds,
+                    worldsUnavailable = worlds.isEmpty(),
+                    isRetrying = _uiState.value.isRetrying,
+                    worlds = worlds,
                     questionsAnsweredToday = questionsToday,
                     levelsCompletedToday = levelsCompleted,
                     dailyGoal = goal,
@@ -65,8 +73,31 @@ class HomeViewModel(
                     dueReviewCount = dueCount,
                     activeDaysThisWeek = stats.activeDaysThisWeek,
                 )
+            }.catch { e ->
+                AppLog.e(TAG, "Error observing home data", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        worldsUnavailable = true,
+                    )
+                }
             }.collect { newState ->
                 _uiState.value = newState
+            }
+        }
+    }
+
+    fun retry() {
+        if (_uiState.value.isRetrying) return
+        _uiState.update { it.copy(isRetrying = true) }
+
+        viewModelScope.launch {
+            try {
+                triviaRepository.fetchRemoteCategories()
+            } catch (e: Exception) {
+                AppLog.e(TAG, "Failed to fetch remote categories on retry", e)
+            } finally {
+                _uiState.update { it.copy(isRetrying = false) }
             }
         }
     }

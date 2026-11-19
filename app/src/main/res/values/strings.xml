@@ -39,6 +39,7 @@
     <string name="home_done_for_today">You reached today\'s goal. Great work. It is a good time to take a break!</string>
     <string name="home_review_due">%1$d cards ready to review</string>
     <string name="home_worlds_header">Worlds</string>
+    <string name="home_error_worlds_unavailable">We couldn\'t load the worlds. Check your internet connection and try again.</string>
 
     <!-- World map -->
     <string name="world_map_title">World map</string>

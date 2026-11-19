@@ -5,7 +5,9 @@ import com.yibopan.quizquest.data.model.UserSettings
 
 /** Everything the Home screen shows (Lecture 5: a UI state data class). */
 data class HomeUIState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
+    val worldsUnavailable: Boolean = false,
+    val isRetrying: Boolean = false,
     val worlds: List<Category> = emptyList(),
     val error: String? = null,
     val questionsAnsweredToday: Int = 0,

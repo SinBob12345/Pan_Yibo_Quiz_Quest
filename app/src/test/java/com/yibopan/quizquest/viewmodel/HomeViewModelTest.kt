@@ -1,6 +1,7 @@
 package com.yibopan.quizquest.viewmodel
 
 import com.yibopan.quizquest.data.model.AnswerRecord
+import com.yibopan.quizquest.data.model.Category
 import com.yibopan.quizquest.data.model.QuizResult
 import com.yibopan.quizquest.data.model.UserSettings
 import com.yibopan.quizquest.fakes.FakeProgressRepository
@@ -53,11 +54,55 @@ class HomeViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
+        assertFalse(state.worldsUnavailable)
         assertEquals(3, state.worlds.size)
         assertEquals(3, state.dailyGoal)
         assertEquals(0, state.levelsCompletedToday)
         assertFalse(state.isDailyGoalReached)
         assertEquals(0, state.dueReviewCount)
+    }
+
+    @Test
+    fun `empty categories sets worldsUnavailable to true and worlds empty`() = runTest {
+        triviaRepo.categoriesFlow.value = emptyList()
+
+        val viewModel = HomeViewModel(
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            statsRepository = statsRepo,
+            settingsRepository = settingsRepo,
+            timeProvider = { 1000L },
+        )
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertTrue(state.worldsUnavailable)
+        assertTrue(state.worlds.isEmpty())
+    }
+
+    @Test
+    fun `retry calls fetchRemoteCategories and updates worldsUnavailable when categories arrive`() = runTest {
+        triviaRepo.categoriesFlow.value = emptyList()
+
+        val viewModel = HomeViewModel(
+            triviaRepository = triviaRepo,
+            progressRepository = progressRepo,
+            reviewRepository = reviewRepo,
+            statsRepository = statsRepo,
+            settingsRepository = settingsRepo,
+            timeProvider = { 1000L },
+        )
+
+        assertTrue(viewModel.uiState.value.worldsUnavailable)
+
+        triviaRepo.categoriesFlow.value = listOf(Category(9, "General Knowledge"))
+        viewModel.retry()
+
+        assertEquals(1, triviaRepo.fetchRemoteCategoriesCount)
+        val newState = viewModel.uiState.value
+        assertFalse(newState.worldsUnavailable)
+        assertEquals(1, newState.worlds.size)
     }
 
     @Test
