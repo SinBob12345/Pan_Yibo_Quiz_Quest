@@ -3,9 +3,12 @@ package com.yibopan.quizquest.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yibopan.quizquest.R
+import com.yibopan.quizquest.data.model.UserSettings
 import com.yibopan.quizquest.data.repository.ReviewRepository
+import com.yibopan.quizquest.data.repository.SettingsRepository
 import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
+import com.yibopan.quizquest.data.sound.SoundPlayer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +22,8 @@ import kotlinx.coroutines.launch
  */
 class ReviewViewModel(
     private val reviewRepository: ReviewRepository,
+    private val settingsRepository: SettingsRepository,
+    private val soundPlayer: SoundPlayer? = null,
     private val timeProvider: TimeProvider = SystemTimeProvider,
 ) : ViewModel() {
 
@@ -26,8 +31,14 @@ class ReviewViewModel(
     val uiState: StateFlow<ReviewUIState> get() = _uiState
 
     private var collectJob: Job? = null
+    private var userSettings: UserSettings = UserSettings()
 
     init {
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { settings ->
+                userSettings = settings
+            }
+        }
         refresh()
     }
 
@@ -55,10 +66,16 @@ class ReviewViewModel(
     }
 
     fun onKnewIt() {
+        if (userSettings.soundEnabled && soundPlayer != null) {
+            soundPlayer.playCorrect()
+        }
         processCardReview(correct = true)
     }
 
     fun onNotYet() {
+        if (userSettings.soundEnabled && soundPlayer != null) {
+            soundPlayer.playWrong()
+        }
         processCardReview(correct = false)
     }
 

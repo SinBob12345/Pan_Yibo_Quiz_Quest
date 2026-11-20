@@ -223,6 +223,9 @@ class QuizViewModel(
                 AppLog.d(TAG, "Timer expired on question index ${quizState.currentIndex + 1}")
                 val timeTaken = timeProvider.now() - questionStartTime
                 quizState = quizEngine.timeUp(quizState, timeTaken)
+                if (userSettings.soundEnabled && soundPlayer != null) {
+                    soundPlayer.playWrong()
+                }
                 updateUIState()
             }
         }

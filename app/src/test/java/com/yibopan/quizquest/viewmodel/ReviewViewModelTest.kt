@@ -2,6 +2,7 @@ package com.yibopan.quizquest.viewmodel
 
 import com.yibopan.quizquest.data.model.AnswerRecord
 import com.yibopan.quizquest.fakes.FakeReviewRepository
+import com.yibopan.quizquest.fakes.FakeSettingsRepository
 import com.yibopan.quizquest.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -22,11 +23,13 @@ class ReviewViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var reviewRepo: FakeReviewRepository
+    private lateinit var settingsRepo: FakeSettingsRepository
     private val now = 1_000_000_000L
 
     @Before
     fun setUp() {
         reviewRepo = FakeReviewRepository()
+        settingsRepo = FakeSettingsRepository()
     }
 
     @Test
@@ -38,6 +41,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
             timeProvider = { now },
         )
 
@@ -57,6 +61,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
             timeProvider = { now },
         )
 
@@ -78,6 +83,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
             timeProvider = { now },
         )
 
@@ -112,6 +118,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
             timeProvider = { now },
         )
 
@@ -133,6 +140,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
             timeProvider = { now },
         )
 
@@ -155,6 +163,7 @@ class ReviewViewModelTest {
 
         val viewModel = ReviewViewModel(
             reviewRepository = reviewRepo,
+            settingsRepository = settingsRepo,
             timeProvider = { now },
         )
 

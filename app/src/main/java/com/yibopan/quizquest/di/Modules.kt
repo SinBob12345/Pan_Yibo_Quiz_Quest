@@ -209,7 +209,14 @@ val appModules = module {
             timeProvider = get(),
         )
     }
-    viewModel { ReviewViewModel(reviewRepository = get(), timeProvider = get()) }
+    viewModel {
+        ReviewViewModel(
+            reviewRepository = get(),
+            settingsRepository = get(),
+            soundPlayer = get(),
+            timeProvider = get(),
+        )
+    }
     viewModel { StatsViewModel(statsRepository = get()) }
     viewModel { SettingsViewModel(settingsRepository = get(), privacyRepository = get(), timeProvider = get()) }
     viewModel { PrivacyViewModel(privacyRepository = get(), exportWriter = get()) }
