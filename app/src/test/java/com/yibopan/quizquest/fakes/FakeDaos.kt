@@ -140,7 +140,7 @@ class FakeQuizSessionDao : QuizSessionDao {
     override suspend fun insert(session: QuizSessionEntity): Long {
         val id = if (session.id == 0L) nextId++ else session.id
         val withId = session.copy(id = id)
-        sessionsState.value = sessionsState.value + withId
+        sessionsState.value += withId
         return id
     }
 
@@ -204,7 +204,7 @@ class FakeReviewCardDao(
     override suspend fun insert(card: ReviewCardEntity): Long {
         val id = if (card.id == 0L) nextId++ else card.id
         val withId = card.copy(id = id)
-        cardsState.value = cardsState.value + withId
+        cardsState.value += withId
         return id
     }
 
