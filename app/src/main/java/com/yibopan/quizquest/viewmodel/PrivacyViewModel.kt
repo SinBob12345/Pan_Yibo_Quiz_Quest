@@ -25,6 +25,14 @@ class PrivacyViewModel(
     private val _uiState = MutableStateFlow(PrivacyUIState())
     val uiState: StateFlow<PrivacyUIState> get() = _uiState
 
+    init {
+        viewModelScope.launch {
+            privacyRepository.observeReportedCount().collect { count ->
+                _uiState.update { it.copy(reportedCount = count) }
+            }
+        }
+    }
+
     fun saveExport(uriString: String) {
         if (_uiState.value.isWorking) return
         _uiState.update { it.copy(isWorking = true, message = null) }
@@ -63,6 +71,32 @@ class PrivacyViewModel(
                 _uiState.update { it.copy(message = PrivacyMessage.DELETED) }
             } catch (e: Exception) {
                 AppLog.e(TAG, "Failed to delete data", e)
+                _uiState.update { it.copy(message = PrivacyMessage.FAILED) }
+            } finally {
+                _uiState.update { it.copy(isWorking = false) }
+            }
+        }
+    }
+
+    fun requestRestore() {
+        _uiState.update { it.copy(showRestoreConfirmation = true) }
+    }
+
+    fun dismissRestore() {
+        _uiState.update { it.copy(showRestoreConfirmation = false) }
+    }
+
+    fun confirmRestore() {
+        if (_uiState.value.isWorking) return
+        _uiState.update { it.copy(showRestoreConfirmation = false, isWorking = true, message = null) }
+
+        viewModelScope.launch {
+            try {
+                privacyRepository.restoreReportedQuestions()
+                AppLog.d(TAG, "Reported questions successfully restored")
+                _uiState.update { it.copy(message = PrivacyMessage.RESTORED) }
+            } catch (e: Exception) {
+                AppLog.e(TAG, "Failed to restore reported questions", e)
                 _uiState.update { it.copy(message = PrivacyMessage.FAILED) }
             } finally {
                 _uiState.update { it.copy(isWorking = false) }

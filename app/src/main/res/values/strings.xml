@@ -153,6 +153,17 @@
     <string name="feedback_subject">QuizQuest feedback</string>
     <string name="privacy_no_email_app_snackbar">No email app found on this phone.</string>
 
+    <plurals name="privacy_reported_questions_count">
+        <item quantity="one">You have hidden %1$d question</item>
+        <item quantity="other">You have hidden %1$d questions</item>
+    </plurals>
+    <string name="privacy_reported_title">Reported questions</string>
+    <string name="privacy_restore_button">Show them again</string>
+    <string name="privacy_restore_dialog_title">Show reported questions again?</string>
+    <string name="privacy_restore_dialog_text">They can appear in quizzes again. You can report them again at any time.</string>
+    <string name="privacy_restore_dialog_confirm">Show again</string>
+    <string name="privacy_snackbar_restored">Reported questions will appear again.</string>
+
     <string name="privacy_export_title">Export My Data</string>
     <string name="privacy_export_desc">Save a file with all your scores, answers and review cards.</string>
     <string name="privacy_export_button">Save a copy</string>

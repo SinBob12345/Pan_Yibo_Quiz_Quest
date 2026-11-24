@@ -183,16 +183,28 @@ class FakePrivacyRepository : PrivacyRepository {
     var deleteAllDataCalled = false
     var deleteExpiredAnswersResult = 0
     var deleteExpiredAnswersCount = 0
+    val reportedCountFlow = MutableStateFlow(0)
+    var restoreReportedQuestionsCalled = false
+    var shouldFail = false
 
     override suspend fun exportAllDataAsJson(): String = exportJsonString
 
     override suspend fun deleteAllData() {
+        if (shouldFail) throw IllegalStateException("Delete failed")
         deleteAllDataCalled = true
     }
 
     override suspend fun deleteExpiredAnswers(nowMillis: Long): Int {
         deleteExpiredAnswersCount++
         return deleteExpiredAnswersResult
+    }
+
+    override fun observeReportedCount(): Flow<Int> = reportedCountFlow
+
+    override suspend fun restoreReportedQuestions() {
+        if (shouldFail) throw IllegalStateException("Restore failed")
+        restoreReportedQuestionsCalled = true
+        reportedCountFlow.value = 0
     }
 }
 

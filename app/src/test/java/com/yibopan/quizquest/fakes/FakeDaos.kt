@@ -91,6 +91,9 @@ class FakeFlaggedQuestionDao : FlaggedQuestionDao {
     override suspend fun getAll(): List<FlaggedQuestionEntity> =
         flaggedEntitiesState.value.sortedByDescending { it.flaggedAt }
 
+    override fun observeCount(): Flow<Int> =
+        flaggedEntitiesState.map { it.size }
+
     override suspend fun insert(flaggedQuestion: FlaggedQuestionEntity) {
         val filtered = flaggedEntitiesState.value.filterNot { it.questionText == flaggedQuestion.questionText }
         flaggedEntitiesState.value = filtered + flaggedQuestion
@@ -98,6 +101,10 @@ class FakeFlaggedQuestionDao : FlaggedQuestionDao {
 
     override suspend fun delete(questionText: String) {
         flaggedEntitiesState.value = flaggedEntitiesState.value.filterNot { it.questionText == questionText }
+    }
+
+    override suspend fun deleteAll() {
+        flaggedEntitiesState.value = emptyList()
     }
 }
 

@@ -1,7 +1,7 @@
 package com.yibopan.quizquest.viewmodel
 
-import com.yibopan.quizquest.data.repository.PrivacyRepository
 import com.yibopan.quizquest.fakes.FakeExportWriter
+import com.yibopan.quizquest.fakes.FakePrivacyRepository
 import com.yibopan.quizquest.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -11,25 +11,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-
-/** Fake PrivacyRepository for unit testing [PrivacyViewModel]. */
-class FakePrivacyRepository : PrivacyRepository {
-    var exportJsonResult: String = "{\"exportedAt\": 1000}"
-    var deleteAllDataCalled = false
-    var shouldFail = false
-
-    override suspend fun exportAllDataAsJson(): String {
-        if (shouldFail) throw IllegalStateException("Export failed")
-        return exportJsonResult
-    }
-
-    override suspend fun deleteAllData() {
-        if (shouldFail) throw IllegalStateException("Delete failed")
-        deleteAllDataCalled = true
-    }
-
-    override suspend fun deleteExpiredAnswers(nowMillis: Long): Int = 0
-}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PrivacyViewModelTest {
@@ -49,6 +30,15 @@ class PrivacyViewModelTest {
     }
 
     @Test
+    fun `reportedCount is observed and updated in uiState`() = runTest {
+        privacyRepo.reportedCountFlow.value = 3
+
+        val viewModel = PrivacyViewModel(privacyRepo, exportWriter)
+
+        assertEquals(3, viewModel.uiState.value.reportedCount)
+    }
+
+    @Test
     fun `saveExport writes json from repository and sets EXPORT_SAVED`() = runTest {
         val testUri = "content://com.android.providers.downloads/document/1"
         viewModel.saveExport(testUri)
@@ -56,7 +46,7 @@ class PrivacyViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isWorking)
         assertEquals(testUri, exportWriter.writtenUri)
-        assertEquals("{\"exportedAt\": 1000}", exportWriter.writtenJson)
+        assertEquals("{\"data\": \"export\"}", exportWriter.writtenJson)
         assertEquals(PrivacyMessage.EXPORT_SAVED, state.message)
     }
 
@@ -84,5 +74,34 @@ class PrivacyViewModelTest {
         assertFalse(state.isWorking)
         assertTrue(privacyRepo.deleteAllDataCalled)
         assertEquals(PrivacyMessage.DELETED, state.message)
+    }
+
+    @Test
+    fun `confirmRestore restores reported questions and sets RESTORED message`() = runTest {
+        privacyRepo.reportedCountFlow.value = 2
+
+        viewModel.requestRestore()
+        assertTrue(viewModel.uiState.value.showRestoreConfirmation)
+
+        viewModel.confirmRestore()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.showRestoreConfirmation)
+        assertFalse(state.isWorking)
+        assertTrue(privacyRepo.restoreReportedQuestionsCalled)
+        assertEquals(0, state.reportedCount)
+        assertEquals(PrivacyMessage.RESTORED, state.message)
+    }
+
+    @Test
+    fun `confirmRestore sets FAILED message on Exception`() = runTest {
+        privacyRepo.shouldFail = true
+
+        viewModel.requestRestore()
+        viewModel.confirmRestore()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isWorking)
+        assertEquals(PrivacyMessage.FAILED, state.message)
     }
 }

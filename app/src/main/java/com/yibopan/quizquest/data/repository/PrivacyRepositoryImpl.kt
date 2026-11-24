@@ -21,6 +21,7 @@ import com.yibopan.quizquest.data.rules.SystemTimeProvider
 import com.yibopan.quizquest.data.rules.TimeProvider
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
@@ -79,5 +80,13 @@ class PrivacyRepositoryImpl(
             ?: UserSettings()
         val cutoff = RetentionPolicy.cutoffMillis(settings.answerRetention, nowMillis) ?: return@withContext 0
         answerRecordDao.deleteOlderThan(cutoff)
+    }
+
+    override fun observeReportedCount(): Flow<Int> {
+        return flaggedQuestionDao.observeCount()
+    }
+
+    override suspend fun restoreReportedQuestions(): Unit = withContext(dispatcher) {
+        flaggedQuestionDao.deleteAll()
     }
 }

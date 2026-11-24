@@ -47,11 +47,17 @@ interface FlaggedQuestionDao {
     @Query("SELECT * FROM FlaggedQuestion ORDER BY flaggedAt DESC")
     suspend fun getAll(): List<FlaggedQuestionEntity>
 
+    @Query("SELECT COUNT(*) FROM FlaggedQuestion")
+    fun observeCount(): Flow<Int>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(flaggedQuestion: FlaggedQuestionEntity)
 
     @Query("DELETE FROM FlaggedQuestion WHERE questionText = :questionText")
     suspend fun delete(questionText: String)
+
+    @Query("DELETE FROM FlaggedQuestion")
+    suspend fun deleteAll()
 }
 
 @Dao

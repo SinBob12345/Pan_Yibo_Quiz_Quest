@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Restore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
@@ -39,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -73,6 +75,9 @@ fun PrivacyScreen(onBackPressed: () -> Unit) {
         onRequestDeleteClicked = { privacyViewModel.requestDelete() },
         onConfirmDeleteClicked = { privacyViewModel.confirmDelete() },
         onDismissDeleteClicked = { privacyViewModel.dismissDelete() },
+        onRequestRestoreClicked = { privacyViewModel.requestRestore() },
+        onConfirmRestoreClicked = { privacyViewModel.confirmRestore() },
+        onDismissRestoreClicked = { privacyViewModel.dismissRestore() },
         onMessageShown = { privacyViewModel.messageShown() },
     )
 }
@@ -86,6 +91,9 @@ fun PrivacyScreenContent(
     onRequestDeleteClicked: () -> Unit = {},
     onConfirmDeleteClicked: () -> Unit = {},
     onDismissDeleteClicked: () -> Unit = {},
+    onRequestRestoreClicked: () -> Unit = {},
+    onConfirmRestoreClicked: () -> Unit = {},
+    onDismissRestoreClicked: () -> Unit = {},
     onMessageShown: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -108,6 +116,7 @@ fun PrivacyScreenContent(
     val message = uiState.message
     val exportSavedMsg = stringResource(R.string.privacy_snackbar_export_saved)
     val deletedMsg = stringResource(R.string.privacy_snackbar_deleted)
+    val restoredMsg = stringResource(R.string.privacy_snackbar_restored)
     val failedMsg = stringResource(R.string.privacy_snackbar_failed)
 
     LaunchedEffect(message) {
@@ -115,6 +124,7 @@ fun PrivacyScreenContent(
             val text = when (message) {
                 PrivacyMessage.EXPORT_SAVED -> exportSavedMsg
                 PrivacyMessage.DELETED -> deletedMsg
+                PrivacyMessage.RESTORED -> restoredMsg
                 PrivacyMessage.FAILED -> failedMsg
             }
             snackbarHostState.showSnackbar(text)
@@ -148,6 +158,38 @@ fun PrivacyScreenContent(
                             .defaultMinSize(minHeight = 48.dp),
                     ) {
                         Text(text = stringResource(R.string.privacy_delete_confirm))
+                    }
+                }
+            },
+        )
+    }
+
+    // Restore Reported Questions AlertDialog (ACS Conduct 1.2.2(d): undoing as easy as doing)
+    if (uiState.showRestoreConfirmation) {
+        AlertDialog(
+            onDismissRequest = onDismissRestoreClicked,
+            title = { Text(text = stringResource(R.string.privacy_restore_dialog_title), modifier = Modifier.semantics { heading() }) },
+            text = { Text(text = stringResource(R.string.privacy_restore_dialog_text)) },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = onDismissRestoreClicked,
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
+                    ) {
+                        Text(text = stringResource(R.string.common_cancel))
+                    }
+                    OutlinedButton(
+                        onClick = onConfirmRestoreClicked,
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
+                    ) {
+                        Text(text = stringResource(R.string.privacy_restore_dialog_confirm))
                     }
                 }
             },
@@ -207,6 +249,38 @@ fun PrivacyScreenContent(
                                 title = stringResource(R.string.privacy_attribution_title),
                                 desc = stringResource(R.string.privacy_attribution_desc),
                             )
+                        }
+                    }
+                }
+
+                // Reported questions restore card
+                item {
+                    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Text(text = stringResource(R.string.privacy_reported_title), style = MaterialTheme.typography.titleSmall)
+                                Text(
+                                    text = pluralStringResource(R.plurals.privacy_reported_questions_count, uiState.reportedCount, uiState.reportedCount),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = onRequestRestoreClicked,
+                                enabled = !uiState.isWorking && uiState.reportedCount > 0,
+                                modifier = Modifier.defaultMinSize(minHeight = 48.dp),
+                            ) {
+                                Icon(imageVector = Icons.Rounded.Restore, contentDescription = null)
+                                Text(text = stringResource(R.string.privacy_restore_button), modifier = Modifier.padding(start = 4.dp))
+                            }
                         }
                     }
                 }

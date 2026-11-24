@@ -2,6 +2,7 @@ package com.yibopan.quizquest.viewmodel
 
 import com.yibopan.quizquest.data.model.ThemeMode
 import com.yibopan.quizquest.data.model.UserSettings
+import com.yibopan.quizquest.fakes.FakePrivacyRepository
 import com.yibopan.quizquest.fakes.FakeSettingsRepository
 import com.yibopan.quizquest.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
