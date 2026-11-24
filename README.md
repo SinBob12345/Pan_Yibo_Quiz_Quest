@@ -6,72 +6,23 @@ knowledge into a game of worlds and levels — designed around privacy and
 
 > CP3406 Assessment 3 · Yibo Pan · James Cook University
 
----
+## Screenshots
 
-## Detailed Features Overview
-
-QuizQuest delivers a complete, interactive, and privacy-focused learning experience built around gamified knowledge exploration, intelligent memory reinforcement, and ethical user design.
-
-### 1. Gamified Knowledge Worlds & Level Progression
-- **9 Distinct Knowledge Worlds:** Explore diverse subject domains including General Knowledge, Science & Nature, History, Geography, Entertainment, Sports, Literature, Art, and Mythology.
-- **Structured 9-Level Map:** Every world features 9 progressive levels categorized by difficulty: Easy (Levels 1–3), Medium (Levels 4–6), and Hard (Levels 7–9).
-- **Star Rating System:** Earn 0 to 3 stars per level based on quiz accuracy ($\ge 80\%$ for 3 stars, $\ge 50\%$ for 2 stars, $\ge 1$ star to pass and unlock the next level).
-- **Non-Blocking Progression:** Levels unlock progressively when earning at least 1 star. Learners can replay previously unlocked levels anytime to improve their star ratings without losing access to higher levels.
-
-### 2. Interactive Quiz Engine & Accessibility Feedback
-- **Multiple Choice & True/False Questions:** Dynamically rendered quiz questions with deterministically shuffled options (`AnswerShuffler`).
-- **50/50 Lifeline Hint:** Use 50/50 hints to remove two incorrect options on challenging multiple-choice questions (2 hints provided per level).
-- **Per-Question Timer Modes:** Configure timer preferences in Settings—Timer Off (default), Relaxed (30 seconds per question), or Challenge (15 seconds per question)—featuring live animated progress bars and clear "Time's up" feedback.
-- **Color-Independent Feedback:** Post-answer feedback cards display prominent status cards, explicit text ("Correct!", "Time's up", "Incorrect"), icons (`CheckCircle`, `Timer`, `Close`), and TalkBack screen reader state descriptions (`"Correct answer"`, `"Your answer, incorrect"`).
-- **Audio Feedback (`SoundPool`):** Optional, custom-synthesized sound effects for correct and wrong answers (toggable in Settings).
-- **Smooth Motion & Reduce Motion:** Fluid Compose transitions (`AnimatedContent`, `AnimatedVisibility`, `animateFloatAsState`) with a dedicated "Reduce motion" setting that overrides all animations with instant `snap()` transitions.
-
-### 3. Spaced Repetition Flashcards (Leitner Review System)
-- **Automatic Memory Cards:** Questions answered incorrectly during quizzes are automatically saved into a 5-box Leitner flashcard review queue.
-- **Adaptive Review Scheduling:** Leitner box intervals adjust review timing: Box 1 (1 day), Box 2 (3 days), Box 3 (7 days), Box 4 (14 days), Box 5 (30 days). Answering correctly promotes a card to the next box; answering incorrectly returns the card to Box 1 for reinforcement.
-- **Lifecycle Auto-Refresh:** The Review tab utilizes `LifecycleResumeEffect` to automatically check and refresh due flashcards whenever the learner opens or resumes the screen.
-- **Double-Tap Protection & Safety:** Prevents accidental double-taps during card updates (`isUpdating` guard) and handles error recovery gracefully.
-- **Gentle Stopping Cue:** Displays an "All caught up!" card when no flashcards are due, encouraging natural study breaks.
-
-### 4. Offline-First Architecture & Network Resilience
-- **Room SQLite Local Caching:** Downloaded trivia questions, user progress, flashcards, and settings are cached locally on device in Room (`QuizDatabase`).
-- **Smart Deduplication & Replay:** Prevents duplicate questions using unique database indices (`OnConflictStrategy.IGNORE`) and randomizes offline question replay order (`ORDER BY RANDOM()`).
-- **OpenTDB API Integration & Throttling:** Fetches questions via Retrofit from OpenTDB with an automated `RateLimiter` enforcing a 5-second interval between network requests to prevent HTTP 429 rate limit errors.
-- **Offline Error Handling & Retry:** Renders friendly error cards with "Try again" buttons when offline or when category loading fails.
-
-### 5. Learning Analytics & Visual Statistics
-- **Overview Summary:** Tracks total questions answered, overall accuracy percentage %, total stars earned, and active learning days this week.
-- **7-Day Daily Activity Chart:** Visual bar chart showing the number of questions answered each day over the past 7 days.
-- **World Accuracy Breakdown:** Progress bars displaying accuracy percentages across each knowledge world played.
-- **Recent Attempts Log:** Real-time log of recent level attempts showing world names, level numbers, correct answer counts, and earned star ratings.
-
-### 6. Privacy Protection & Learner Control
-- **Storage Access Framework (SAF) File Export:** One-tap data export saving a local JSON file (`quizquest-export-YYYY-MM-DD.json`) via system file picker (`CreateDocument`), requiring **zero runtime storage permissions** and avoiding Binder transaction limits.
-- **Complete Local Data Deletion:** One-tap "Delete All Data" option with an unambiguous, neutral confirmation dialog offering equal visual weight choices ("Keep my data" vs "Delete everything").
-- **Customizable Answer Retention:** Set answer history expiration (30 days, 90 days, or Forever) with immediate background database purging.
-- **On-Device Question Flagging:** Tap the flag icon on any question to report bad content—reported questions are stored locally in Room (`FlaggedQuestionEntity`) and permanently filtered out of future quizzes and review queues (`NOT IN (SELECT questionText FROM FlaggedQuestion)`).
-- **Direct Developer Email Feedback:** Embedded feedback launcher opening external email clients pre-addressed to `yibo.pan@my.jcu.edu.au` with fallback Snackbar notification ("No email app found on this phone.") if no mail client exists.
-
-### 7. Ethical Design & Accessibility
-- **Motivation Without Manipulation:** No streak counters (eliminates reset anxiety), no push notifications, no dark patterns, no ads, and no tracking/analytics SDKs.
-- **Gentle Stopping Cues:** "You reached today's goal. Great work. It is a good time to take a break!" cards and "All caught up!" flashcard screens encourage healthy learning boundaries.
-- **Accessibility Standards:** $48\text{ dp}$ minimum touch targets, high contrast dark/light themes, 200% font scaling support without text clipping, TalkBack semantics (`heading()`, `stateDescription`, `mergeDescendants`), and color-independent status indicators.
-- **Adaptive Screen Layouts:** Renders a bottom `NavigationBar` on compact phone screens and a `NavigationRail` / two-pane side-by-side layout on tablets (`WindowWidthSizeClass.EXPANDED`).
+> _TODO (Stage 10): add 3–5 screenshots here (phone + tablet, light + dark)._
 
 ---
 
-## Features Summary Matrix
+## Features
 
-| Feature | Description | Implementation Details |
-|---|---|---|
-| **Worlds & Levels** | 9 knowledge domains with 9 progressive levels per world (Easy, Medium, Hard). | OpenTDB API, Room caching, `LevelPolicy` unlocking rules. |
-| **Interactive Quiz** | Quiz gameplay with 50/50 hints, timers, feedback, and sound effects. | Pure Kotlin `QuizEngine`, `animateFloatAsState`, `SoundPool`. |
-| **Spaced Repetition** | Leitner 5-box flashcard system for review of wrongly answered questions. | `LeitnerScheduler`, `ReviewCardDao`, `LifecycleResumeEffect`. |
-| **Offline-First Play** | Play quizzes and review flashcards without an active internet connection. | Room SQLite database, `OnConflictStrategy.IGNORE`, `RateLimiter`. |
-| **Learning Statistics** | Comprehensive accuracy %, active days, 7-day chart, and recent attempts. | `StatsSummary`, `QuizSessionDao`, `CategoryAccuracyRow`. |
-| **Settings & Preferences** | Custom timer mode, questions per level, daily goal, sound, theme, and retention. | `SettingsDao`, `SettingsViewModel`, `MainViewModel.init`. |
-| **Privacy & Export** | One-tap SAF file export (`.json`) and complete local data deletion. | `ExportWriter`, `CreateDocument` picker, `PrivacyRepository`. |
-| **On-Device Flagging** | Report unsuitable questions to hide them permanently on-device. | `FlaggedQuestionEntity`, Room SQL `NOT IN` subqueries. |
+| Feature | How it is implemented |
+|---|---|
+| Worlds & levels | 7 allowed academic worlds (`CategoryFilter.ALLOWED_CATEGORY_IDS`: General Knowledge, Science & Nature, Computers, Mathematics, Geography, History, Animals) fetched from OpenTDB / Room. Level map generated by `LevelPolicy` (9 levels per world: 1–3 Easy, 4–6 Medium, 7–9 Hard). Levels unlock when earning $\ge 1$ star on preceding levels. |
+| Quiz with 50/50 hint and optional timer | Pure state machine `QuizEngine` supporting 50/50 hints (removes 2 wrong options) and question timers (Off by default, Relaxed 30s, Challenge 15s). Shows live progress bar, scale/fade feedback cards, and "Time's up" status. |
+| Offline play | Offline-first architecture via Room (`QuizDatabase`). Questions downloaded from OpenTDB are cached locally in `QuestionDao` (`OnConflictStrategy.IGNORE`, SQL filter `NOT IN (SELECT questionText FROM FlaggedQuestion)`, `ORDER BY RANDOM()`). |
+| Review flashcards (spaced repetition) | Leitner 5-box spaced repetition system (`LeitnerScheduler`). Box review intervals are 1, 2, 4, 7, and 14 days. Failed answers enter Box 1, correct answers advance boxes. Refreshed on screen resume via `LifecycleResumeEffect`. |
+| Statistics | `StatsSummary` aggregating overall accuracy %, total stars, active days this week, 7-day daily activity chart, category accuracy bars, and recent attempt history with real category names resolved from Room. |
+| Settings | Learner preferences stored locally in Room (`SettingsDao` / `SettingsEntity`): questions per level, timer mode, daily goal, sound effects, reduce motion, and theme mode. |
+| Privacy: export & delete my data | Storage Access Framework (SAF) file export (`ExportWriter` / `CreateDocument` picker) saving a local JSON file (`quizquest-export-YYYY-MM-DD.json`) containing settings, level progress, sessions, answers, review cards, and reported questions. One-tap "Delete All Data" with confirmation ("Keep my data" vs "Delete everything"). Question reporting permanently hides bad questions on-device with an undo option. |
 
 ---
 
@@ -99,7 +50,7 @@ navigation/  Screens sealed class + NavHost (Lecture 6)
 di/          Koin appModules (Lecture 4)
 ```
 
-- **Navigation:** Jetpack Navigation with string routes and `navArgument`s (`Screens` sealed class). Renders a bottom `NavigationBar` on compact phone screens and a `NavigationRail` on large screens based on `WindowWidthSizeClass` (Lecture 3).
+- **Navigation:** Jetpack Navigation Compose with string routes and `navArgument`s (`Screens` sealed class). Renders a bottom `NavigationBar` on compact phone screens and a `NavigationRail` on large screens based on `WindowWidthSizeClass` (Lecture 3).
 - **Room Schema & Storage:** `QuizDatabase` manages entities for categories, questions, flagged questions, level progress, quiz sessions, answer records, review cards, and user settings. Uses `@TypeConverters` for string list conversion and `OnConflictStrategy.IGNORE` with unique indices.
 - **Offline Cache & Rate Limiting:** `TriviaRepositoryImpl` queries Room first. `RateLimiter` enforces a 5-second interval between OpenTDB network requests to prevent HTTP 429 rate limit errors.
 
@@ -116,7 +67,17 @@ di/          Koin appModules (Lecture 4)
 | 5 Network calls | Retrofit, OkHttp, `kotlinx.serialization`, Coroutines (`Dispatchers.IO`), `StateFlow`, `NetworkResult`, Compose animations (`AnimatedContent`, `AnimatedVisibility`, `animateFloatAsState`). |
 | 6 Navigation | Jetpack Navigation Compose, sealed `Screens` class, `NavHost`, route parameters, back stack management (`BackHandler`). |
 | 7 Room | Room database (`QuizDatabase`), DAOs (`@Query`, `@Insert`, `@Update`), entities, TypeConverters, offline-first repository caching. |
-| 8 Debugging | Logcat technical event logging (`BuildConfig.DEBUG` check via `AppLog`), LeakCanary for memory leak detection, Android Studio App Inspection (Database Inspector). |
+| 8 Debugging | Logcat technical event logging (`BuildConfig.DEBUG` guard via `AppLog`), LeakCanary for memory leak detection, Android Studio App Inspection (Database Inspector). |
+| 9 Publishing & Safety | Release checklist, `versionName = "1.0.0"`, `BuildConfig` logging guards, `strings.xml` localization, plain-language data safety declarations, target audience 13–17 guidelines. |
+
+---
+
+## Laws and Policies Considered
+
+In accordance with ACS Conduct 1.2.4(c) (professional standards) and ethical software design for secondary-school learners:
+- **Privacy Act 1988 & Australian Privacy Principles (APPs):** Enforces data minimization, local SQLite containment, transparent disclosures, and user-initiated data deletion.
+- **Children's Online Privacy Code (OAIC):** Applied conservative 30-day data retention defaults, zero telemetry/analytics tracking, and plain-language notices understandable by teenagers.
+- **Google Play Families & User Data Policies:** Zero advertising IDs, no location permissions, transparent data safety declarations, and no dark patterns or coercive mechanics.
 
 ---
 
@@ -124,7 +85,7 @@ di/          Koin appModules (Lecture 4)
 
 Questions come from the [Open Trivia Database](https://opentdb.com/), licensed under
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Questions are
-community-written and may contain mistakes; learners can report a question to hide it permanently on their device.
+community-written and may contain mistakes; learners can report a question to hide it on their device, with an option to restore reported questions anytime.
 
 Sound effects (`res/raw/sfx_*.wav`) were generated for this project and played via `SoundPool`.
 
@@ -132,18 +93,37 @@ Sound effects (`res/raw/sfx_*.wav`) were generated for this project and played v
 
 ## Ethical Design
 
-Based on Assessment 2 commitments (location privacy and dark patterns avoidance).
+Based on Assessment 2 commitments (location privacy, child protection, and avoiding dark patterns).
 
-| A2 commitment | Where it is in the app |
-|---|---|
-| No location permission | Manifest has only `INTERNET` |
-| Local storage, one-tap export and delete | Local Room storage; SAF file picker export (`ExportWriter`); one-tap "Delete All Data" with confirmation. |
-| Opt-in notifications | The app sends no push or local notifications at all. |
-| Honest data-safety declaration, plain-language notice | Plain-language Privacy screen explaining data safety in teen-friendly terms. |
-| No ads/SDKs; dependencies reviewed | No advertising SDKs, tracking telemetry, or third-party analytics. |
-| Motivation without manipulation | Active days counter (no streak resets/penalties); equal-weight buttons; gentle "done for today" and "all caught up" stopping cues. |
-| Accessible by default | High contrast colour palette, $\ge 48\text{ dp}$ touch targets, TalkBack semantics, 200% font scaling, colour-independent feedback, and "Reduce motion" support. |
-| Ethics review per feature | Recorded in `docs/ethics-review.md`. |
+Designed to avoid dark patterns — see the complete 5-step ACS check and checklist in [docs/ethics-review-draft.md](file:///D:/cp3406/QuizQuest_A3_Skeleton_1/QuizQuest/docs/ethics-review-draft.md).
+
+| A2 Commitment | Where it is in the app (File/Class) | Test Verifying It |
+| :--- | :--- | :--- |
+| **No location permission** | `AndroidManifest.xml` (only `uses-permission android:name="android.permission.INTERNET"`) | `AppSmokeTest` |
+| **Local storage & one-tap export & delete** | `PrivacyRepositoryImpl.kt` (`exportAllDataAsJson`, `deleteAllData`), `ExportWriter.kt` (`CreateDocument` SAF picker) | `ExportSerializerTest`, `PrivacyViewModelTest`, `PrivacyRepositoryTest` |
+| **Opt-in notifications (No unsolicited prompts)** | `AndroidManifest.xml` (zero notification permissions or receivers) | `AppSmokeTest` |
+| **Honest data-safety declaration & plain-language notice** | `strings.xml` (`privacy_*`), `PrivacyScreen.kt` | `PrivacyScreenTest` |
+| **No ads/SDKs; dependencies reviewed** | `build.gradle.kts` (no ad/analytics dependencies) | `AppSmokeTest` |
+| **Motivation without manipulation** | `DailyGoalTracker.kt` (no streaks), `ResultScreen.kt` (equal-weight buttons, non-shaming guidance), `ReviewScreen.kt` (equal-weight buttons) | `DailyGoalTrackerTest`, `ResultScreenTest`, `ReviewScreenTest` |
+| **Accessible by default** | `ContrastChecker.kt`, `Theme.kt`, `SettingsScreen.kt` (`reduceMotion`), `QuizScreen.kt` ($\ge 48\text{ dp}$ buttons, TalkBack semantics) | `ThemeContrastTest`, `QuizScreenTest`, `SettingsScreenTest` |
+| **Ethics review per feature** | [docs/ethics-review-draft.md](file:///D:/cp3406/QuizQuest_A3_Skeleton_1/QuizQuest/docs/ethics-review-draft.md) (5-step ACS checks) | `SkeletonSanityTest` |
+| **Complete data export** | `UserDataExport.kt` (includes scores, answers, cards, settings, and `reportedQuestions`) | `ExportSerializerTest`, `PrivacyRepositoryTest` |
+| **Undo reported questions** | `FlaggedQuestionDao.kt` (`deleteAll`), `PrivacyViewModel.kt` (`confirmRestore`) | `PrivacyViewModelTest`, `PrivacyScreenTest` |
+| **Immediate retention purging** | `PrivacyViewModel.kt` (`deleteExpiredAnswers`), `RetentionPolicy.kt` | `PrivacyViewModelTest` |
+| **Teen-privacy defaults** | `UserSettings.kt` (`answerRetention = DAYS_30`), `Entities.kt` | `SkeletonSanityTest`, `PrivacyViewModelTest` |
+| **Supportive result feedback** | `ResultScreen.kt` (`result_guidance_*`, `liveRegion = Polite`, no "fail" text) | `ResultScreenTest` |
+
+### Data Safety (as declared on Google Play — Lecture 9)
+
+| Data | Collected? | Shared? | Notes |
+|---|---|---|---|
+| Location | No | No | No location permission requested. |
+| Personal info (name, email, age) | No | No | No user accounts or personal registration required. |
+| App activity (scores, answers, reported questions) | Stored on device only | No | Stored in Room SQLite database; deleted by retention setting (default 30 days) or "Delete all my data". |
+| Device or advertising IDs | No | No | Zero advertising or device tracking SDKs included. |
+| Network | — | — | HTTPS requests to opentdb.com contain only category ID, difficulty, question amount and a random session token. Like any web server, opentdb.com sees the device's IP address. |
+
+*Note on Debug Tools:* LeakCanary is included strictly in debug builds (`debugImplementation`). Its storage and notification permissions are excluded from release builds, which contain only `INTERNET`.
 
 ### Dependency Review
 
@@ -163,9 +143,9 @@ Based on Assessment 2 commitments (location privacy and dark patterns avoidance)
 ## Accessibility
 
 - **Touch Targets:** All interactive buttons and cards enforce a minimum size of $48\text{ dp}$ (`defaultMinSize(minHeight = 48.dp)`).
-- **Screen Reader Semantics:** Includes `contentDescription` for action icons, `onClickLabel` for clickable items, `heading()` semantics for titles, and `stateDescription` for level lock states, star ratings, and option feedback.
+- **Screen Reader Semantics:** Includes `contentDescription` for action icons, `onClickLabel` for clickable items, `heading()` semantics for titles, `liveRegion = Polite` for result guidance, and `stateDescription` for level lock states, star ratings, and option feedback.
 - **Group Semantics:** Applies `semantics(mergeDescendants = true)` to composite list items, stat cards, and flashcards so TalkBack reads them as single nodes.
-- **Colour Independence:** Correct/incorrect feedback uses CheckCircle/Close icons and explicit text ("Correct!", "Time's up", "Incorrect"), never colour alone.
+- **Color Independence:** Correct/incorrect feedback uses CheckCircle/Close icons and explicit text ("Correct!", "Time's up", "Incorrect"), never color alone.
 - **Font Scaling:** Supports 200% font scaling (`fontScale = 2f`) with scrollable containers preventing text clipping.
 - **Motion Control:** Respects the "Reduce motion" setting, overriding all Compose transitions with instant `snap()` animations.
 - **Adaptive Two-Pane Layouts:** Displays two-pane side-by-side layouts on `EXPANDED` tablet screens for Quiz and Stats screens.
@@ -181,42 +161,43 @@ Based on Assessment 2 commitments (location privacy and dark patterns avoidance)
 
 ### Test Suite Summary Table
 
-#### **Unit Tests (JVM)** (`app/src/test`) — Total: **162 tests**
+#### **Unit Tests (JVM)** (`app/src/test`) — Total: **173 tests**
 
 | Test Class | Location | Scope / What it Covers | Number of Tests |
 | :--- | :--- | :--- | :---: |
-| `SkeletonSanityTest` | `app/src/test/...` | Verifies basic JVM test execution environment and sanity checks | 4 |
+| `SkeletonSanityTest` | `app/src/test/...` | Verifies basic JVM test execution environment and ethical defaults | 4 |
 | `EntityMappersTest` | `app/src/test/.../database` | Room database entity <-> domain model bi-directional mapping functions | 9 |
 | `QuizTypeConvertersTest` | `app/src/test/.../database` | Type converters for `List<String>` list serialization in Room entities | 5 |
-| `ExportSerializerTest` | `app/src/test/.../export` | Serialization and formatting of complete user data export JSON structures | 1 |
+| `ExportSerializerTest` | `app/src/test/.../export` | Serialization and formatting of complete user data export JSON structures | 2 |
 | `NetworkMappingTest` | `app/src/test/.../network` | OpenTDB API response DTO mapping into domain models & HTML unescaping | 5 |
 | `RateLimiterTest` | `app/src/test/.../network` | Throttling logic enforcing 5-second interval between OpenTDB requests | 5 |
 | `TextDecoderTest` | `app/src/test/.../network` | HTML entity decoding helper (`&quot;`, `&#039;`, `&amp;`, etc.) | 5 |
 | `ProgressRepositoryTest` | `app/src/test/.../repository` | Quiz session result saving, star computation, and daily completion tracking | 3 |
 | `ReviewRepositoryTest` | `app/src/test/.../repository` | Leitner box card creation, promotion, demotion, and `createdAt` preservation | 4 |
-| `SettingsRepositoryTest` | `app/src/test/.../repository` | User settings DataStore/Room persistence and reactive Flow updates | 2 |
+| `SettingsRepositoryTest` | `app/src/test/.../repository` | User settings Room persistence and reactive Flow updates | 2 |
 | `StatsRepositoryTest` | `app/src/test/.../repository` | Aggregation of overall accuracy, total stars, active days, and 7-day stats | 1 |
 | `TriviaRepositoryTest` | `app/src/test/.../repository` | Question fetching, token expiration/depletion handling, and offline fallback | 7 |
 | `AnswerShufflerTest` | `app/src/test/.../rules` | Deterministic shuffling of multiple-choice and boolean question options | 2 |
 | `CategoryFilterTest` | `app/src/test/.../rules` | Filtering allowed categories and handling disallowed/empty category IDs | 5 |
 | `DailyGoalTrackerTest` | `app/src/test/.../rules` | Start-of-day timestamp calculations, completion counting, and goal detection | 8 |
-| `LeitnerSchedulerTest` | `app/src/test/.../rules` | Leitner 5-box intervals, box promotions/demotions, and due date scheduling | 9 |
+| `LeitnerSchedulerTest` | `app/src/test/.../rules` | Leitner 5-box intervals (1, 2, 4, 7, 14 days) and box promotions/demotions | 9 |
 | `LevelPolicyTest` | `app/src/test/.../rules` | Level difficulty mapping (1-3 Easy, 4-6 Medium, 7-9 Hard) & unlocking rules | 10 |
 | `QuizEngineTest` | `app/src/test/.../rules` | State machine transitions (`start`, `selectAnswer`, `timeUp`, `next`, `50/50`, `skipCurrent`) | 16 |
 | `RetentionPolicyTest` | `app/src/test/.../rules` | History retention period calculations (30 days, 90 days, Forever) | 3 |
-| `StarRatingTest` | `app/src/test/.../rules` | Star calculations based on correct answer percentages (0, 1, 2, or 3 stars) | 8 |
+| `StarRatingTest` | `app/src/test/.../rules` | Star calculations based on correct answer percentages (1 star $\ge 60\%$, 2 stars $\ge 80\%$, 3 stars $100\%$) | 8 |
 | `FakeRepositoriesTest` | `app/src/test/.../fakes` | Unit test validation of in-memory fake repositories used across ViewModel tests | 6 |
-| `HomeViewModelTest` | `app/src/test/.../viewmodel` | Home UI state mapping, daily goal detection, and offline world retry logic | 5 |
+| `HomeViewModelTest` | `app/src/test/.../viewmodel` | Home UI state mapping, daily goal detection, and offline world retry logic | 6 |
 | `MainViewModelTest` | `app/src/test/.../viewmodel` | App startup theme selection (`shouldEnableDarkTheme`) and history retention cleanup | 2 |
-| `PrivacyViewModelTest` | `app/src/test/.../viewmodel` | File export via `ExportWriter`, data deletion confirmation, and error state handling | 3 |
-| `QuizViewModelTest` | `app/src/test/.../viewmodel` | Quiz gameplay, per-question timers, 50/50 hint, sound effects, question reporting, and save retries | 11 |
+| `PrivacyViewModelTest` | `app/src/test/.../viewmodel` | SAF file export via `ExportWriter`, data deletion, answer retention, and undo reported questions | 7 |
+| `QuizViewModelTest` | `app/src/test/.../viewmodel` | Quiz gameplay, per-question timers, 50/50 hint, sound effects, question reporting, and save retries | 12 |
 | `ResultViewModelTest` | `app/src/test/.../viewmodel` | Result score mapping, stopping cue detection, and cumulative best-stars next level unlocking | 5 |
-| `ReviewViewModelTest` | `app/src/test/.../viewmodel` | Flashcard queueing, Leitner reviews, double-tap protection, and lifecycle refresh | 5 |
-| `SettingsViewModelTest` | `app/src/test/.../viewmodel` | Setting updates (timer, sound, reduce motion, theme) and immediate retention cleanup | 6 |
+| `ReviewViewModelTest` | `app/src/test/.../viewmodel` | Flashcard queueing, Leitner reviews, double-tap protection, and lifecycle refresh | 6 |
+| `SettingsViewModelTest` | `app/src/test/.../viewmodel` | Setting updates (questions per level, timer mode, daily goal, sound, reduce motion, theme) | 5 |
 | `StatsViewModelTest` | `app/src/test/.../viewmodel` | Overview summary mapping, empty state zeros, 7-day activity, and flow error handling | 4 |
 | `WorldMapViewModelTest` | `app/src/test/.../viewmodel` | 9-level grid generation, star mapping, level unlocking, and unknown world fallback | 4 |
+| `ThemeContrastTest` | `app/src/test/.../ui/theme` | Programmatic WCAG 2.1 AA color contrast verification for Light and Dark themes ($\ge 4.5:1$) | 3 |
 
-#### **Android Instrumented Tests** (`app/src/androidTest`) — Total: **33 tests**
+#### **Android Instrumented Tests** (`app/src/androidTest`) — Total: **45 tests**
 
 | Test Class | Location | Scope / What it Covers | Number of Tests |
 | :--- | :--- | :--- | :---: |
@@ -224,14 +205,15 @@ Based on Assessment 2 commitments (location privacy and dark patterns avoidance)
 | `AppNavigationTest` | `app/src/androidTest/...` | End-to-end bottom bar tab switching, play-flow tab hiding, and back navigation | 2 |
 | `QuizDatabaseTest` | `app/src/androidTest/.../database` | In-memory Room database DAO integration, cascade deletes, indices, and queries | 12 |
 | `RoomRepositoryIntegrationTest` | `app/src/androidTest/.../repository` | End-to-end Room repository integration testing with actual SQLite database | 5 |
+| `PrivacyRepositoryTest` | `app/src/androidTest/.../repository` | Integration test for `exportAllDataAsJson()` verifying `appVersion` and `reportedQuestions` | 1 |
 | `HomeScreenTest` | `app/src/androidTest/.../views` | Stateless `HomeScreenContent` UI rendering, offline error card, and Retry button | 1 |
 | `WorldMapScreenTest` | `app/src/androidTest/.../views` | Stateless `WorldMapScreenContent` UI grid, star rows, and locked state descriptions | 2 |
 | `QuizScreenTest` | `app/src/androidTest/.../views` | Stateless `QuizScreenContent` UI, options, feedback, 50/50, leave dialog, and option state descriptions | 5 |
-| `ResultScreenTest` | `app/src/androidTest/.../views` | Stateless `ResultScreenContent` UI, score, equal-weight action buttons, and locked next level | 3 |
+| `ResultScreenTest` | `app/src/androidTest/.../views` | Stateless `ResultScreenContent` UI, score, guidance copy, equal-weight buttons, and locked next level | 5 |
 | `ReviewScreenTest` | `app/src/androidTest/.../views` | Stateless `ReviewScreenContent` UI, flashcard question/answer sides, and all-caught-up state | 3 |
 | `SettingsScreenTest` | `app/src/androidTest/.../views` | Stateless `SettingsScreenContent` UI rows, option dialogs, and sound toggle callbacks | 2 |
 | `StatsScreenTest` | `app/src/androidTest/.../views` | Stateless `StatsScreenContent` UI overview totals, world accuracy, 7-day bars, and recent attempt rows | 2 |
-| `PrivacyScreenTest` | `app/src/androidTest/.../views` | Stateless `PrivacyScreenContent` UI sections, file export card, and neutral delete confirmation dialog | 2 |
+| `PrivacyScreenTest` | `app/src/androidTest/.../views` | Stateless `PrivacyScreenContent` UI sections, file export card, retention option, and neutral dialogs | 4 |
 
 ---
 
