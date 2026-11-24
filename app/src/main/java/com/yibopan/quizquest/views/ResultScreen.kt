@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,6 +72,20 @@ fun ResultScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val starsState = stringResource(R.string.world_level_stars_state, uiState.stars)
+
+    val guidanceBase = when (uiState.stars) {
+        3 -> stringResource(R.string.result_guidance_3_stars)
+        2 -> stringResource(R.string.result_guidance_2_stars)
+        1 -> stringResource(R.string.result_guidance_1_star)
+        else -> stringResource(R.string.result_guidance_0_stars)
+    }
+
+    val missedText = if (uiState.correctCount < uiState.totalCount) {
+        " " + stringResource(R.string.result_guidance_missed_in_review)
+    } else ""
+
+    val guidanceText = guidanceBase + missedText
+
     Scaffold(
         modifier = modifier.testTag(TestTags.SCREEN_RESULT),
         topBar = { AppTopBar(title = stringResource(R.string.result_title)) },
@@ -99,6 +115,11 @@ fun ResultScreenContent(
                     starSize = 40.dp,
                     reduceMotion = uiState.reduceMotion,
                     modifier = Modifier.semantics { stateDescription = starsState },
+                )
+                Text(
+                    text = guidanceText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 )
                 if (uiState.isDailyGoalReached) {
                     Card(

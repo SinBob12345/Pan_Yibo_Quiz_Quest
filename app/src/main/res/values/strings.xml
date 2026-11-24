@@ -78,6 +78,11 @@
     <string name="result_score">%1$d of %2$d correct</string>
     <string name="result_next_level">Next level</string>
     <string name="result_back_to_map">Back to map</string>
+    <string name="result_guidance_3_stars">Perfect score – you know this level well.</string>
+    <string name="result_guidance_2_stars">Great result. You passed this level.</string>
+    <string name="result_guidance_1_star">You passed this level. Replay it any time to earn more stars.</string>
+    <string name="result_guidance_0_stars">Not passed yet – that\'s part of learning. Try this level again when you\'re ready.</string>
+    <string name="result_guidance_missed_in_review">The questions you missed are now in Review.</string>
 
     <!-- Review / Stats / Settings / Privacy -->
     <string name="review_title">Review</string>
