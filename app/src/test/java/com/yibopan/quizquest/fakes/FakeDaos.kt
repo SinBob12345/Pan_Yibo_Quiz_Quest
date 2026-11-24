@@ -83,16 +83,21 @@ class FakeQuestionDao(
 }
 
 class FakeFlaggedQuestionDao : FlaggedQuestionDao {
-    private val flaggedState = MutableStateFlow<List<String>>(emptyList())
+    private val flaggedEntitiesState = MutableStateFlow<List<FlaggedQuestionEntity>>(emptyList())
 
-    override fun getFlaggedQuestionTexts(): Flow<List<String>> = flaggedState
+    override fun getFlaggedQuestionTexts(): Flow<List<String>> =
+        flaggedEntitiesState.map { list -> list.map { it.questionText } }
+
+    override suspend fun getAll(): List<FlaggedQuestionEntity> =
+        flaggedEntitiesState.value.sortedByDescending { it.flaggedAt }
 
     override suspend fun insert(flaggedQuestion: FlaggedQuestionEntity) {
-        flaggedState.value = (flaggedState.value + flaggedQuestion.questionText).distinct()
+        val filtered = flaggedEntitiesState.value.filterNot { it.questionText == flaggedQuestion.questionText }
+        flaggedEntitiesState.value = filtered + flaggedQuestion
     }
 
     override suspend fun delete(questionText: String) {
-        flaggedState.value = flaggedState.value.filter { it != questionText }
+        flaggedEntitiesState.value = flaggedEntitiesState.value.filterNot { it.questionText == questionText }
     }
 }
 

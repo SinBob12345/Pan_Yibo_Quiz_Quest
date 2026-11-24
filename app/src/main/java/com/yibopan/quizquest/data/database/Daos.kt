@@ -44,6 +44,9 @@ interface FlaggedQuestionDao {
     @Query("SELECT questionText FROM FlaggedQuestion")
     fun getFlaggedQuestionTexts(): Flow<List<String>>
 
+    @Query("SELECT * FROM FlaggedQuestion ORDER BY flaggedAt DESC")
+    suspend fun getAll(): List<FlaggedQuestionEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(flaggedQuestion: FlaggedQuestionEntity)
 

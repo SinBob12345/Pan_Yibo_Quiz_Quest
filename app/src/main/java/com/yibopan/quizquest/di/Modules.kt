@@ -2,6 +2,7 @@ package com.yibopan.quizquest.di
 
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.yibopan.quizquest.BuildConfig
 import com.yibopan.quizquest.data.database.AnswerRecordDao
 import com.yibopan.quizquest.data.database.CategoryDao
 import com.yibopan.quizquest.data.database.FlaggedQuestionDao
@@ -156,6 +157,8 @@ val appModules = module {
             quizSessionDao = get(),
             answerRecordDao = get(),
             reviewCardDao = get(),
+            flaggedQuestionDao = get(),
+            appVersion = BuildConfig.VERSION_NAME,
             timeProvider = get(),
             dispatcher = get(),
         )

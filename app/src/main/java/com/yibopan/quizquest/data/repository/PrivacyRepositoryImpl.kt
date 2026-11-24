@@ -1,6 +1,7 @@
 package com.yibopan.quizquest.data.repository
 
 import com.yibopan.quizquest.data.database.AnswerRecordDao
+import com.yibopan.quizquest.data.database.FlaggedQuestionDao
 import com.yibopan.quizquest.data.database.LevelProgressDao
 import com.yibopan.quizquest.data.database.QuizDatabase
 import com.yibopan.quizquest.data.database.QuizSessionDao
@@ -12,6 +13,7 @@ import com.yibopan.quizquest.data.database.toQuizResult
 import com.yibopan.quizquest.data.database.toReviewCard
 import com.yibopan.quizquest.data.database.toUserSettings
 import com.yibopan.quizquest.data.export.ExportSerializer
+import com.yibopan.quizquest.data.export.ReportedQuestion
 import com.yibopan.quizquest.data.export.UserDataExport
 import com.yibopan.quizquest.data.model.UserSettings
 import com.yibopan.quizquest.data.rules.RetentionPolicy
@@ -32,6 +34,8 @@ class PrivacyRepositoryImpl(
     private val quizSessionDao: QuizSessionDao,
     private val answerRecordDao: AnswerRecordDao,
     private val reviewCardDao: ReviewCardDao,
+    private val flaggedQuestionDao: FlaggedQuestionDao,
+    private val appVersion: String = "1.0.0",
     private val timeProvider: TimeProvider = SystemTimeProvider,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : PrivacyRepository {
@@ -48,14 +52,19 @@ class PrivacyRepositoryImpl(
             answerRecordDao.getAnswersForSession(session.sessionId).map { it.toAnswerRecord() }
         }
         val reviewCardsList = reviewCardDao.getAllReviewCards().first().map { it.toReviewCard() }
+        val reportedQuestionsList = flaggedQuestionDao.getAll().map {
+            ReportedQuestion(questionText = it.questionText, reportedAt = it.flaggedAt)
+        }
 
         val exportContainer = UserDataExport(
             exportedAt = now,
+            appVersion = appVersion,
             settings = settings,
             levelProgress = progressList,
             sessions = sessionsList,
             answers = answersList,
             reviewCards = reviewCardsList,
+            reportedQuestions = reportedQuestionsList,
         )
 
         ExportSerializer.toJson(exportContainer)

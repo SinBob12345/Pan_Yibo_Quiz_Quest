@@ -8,6 +8,12 @@ import com.yibopan.quizquest.data.model.UserSettings
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+@Serializable
+data class ReportedQuestion(
+    val questionText: String,
+    val reportedAt: Long,
+)
+
 /**
  * Export container for the learner's local data (A2 commitment #2, ACS Ethics 2.2(d)).
  * Contains strictly stored app data without device IDs, tracking codes, or personal identifiers.
@@ -15,12 +21,13 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class UserDataExport(
     val exportedAt: Long,
-    val appVersion: String = "0.1.0",
+    val appVersion: String,
     val settings: UserSettings,
     val levelProgress: List<LevelProgress>,
     val sessions: List<QuizResult>,
     val answers: List<AnswerRecord>,
     val reviewCards: List<ReviewCard>,
+    val reportedQuestions: List<ReportedQuestion>,
 )
 
 object ExportSerializer {
