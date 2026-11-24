@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  * Learner preferences, saved in Room (Lecture 7) in Stage 4.
  * The defaults are deliberate ethical choices (A2 commitments): no timer pressure,
- * a modest daily goal, and answer history kept for 90 days only.
+ * a modest daily goal, and answer history kept for 30 days default (best interests of the child).
  */
 @Serializable
 data class UserSettings(
@@ -15,7 +15,7 @@ data class UserSettings(
     val reduceMotion: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dailyGoalLevels: Int = 3,
-    val answerRetention: RetentionPeriod = RetentionPeriod.DAYS_90,
+    val answerRetention: RetentionPeriod = RetentionPeriod.DAYS_30,
 )
 
 /** Optional per-question timer. OFF is the default so learners are not pressured. */

@@ -35,7 +35,7 @@ class SettingsRepositoryTest {
 
         assertEquals(10, settings.questionsPerLevel)
         assertEquals(TimerMode.OFF, settings.timerMode)
-        assertEquals(RetentionPeriod.DAYS_90, settings.answerRetention)
+        assertEquals(RetentionPeriod.DAYS_30, settings.answerRetention)
     }
 
     @Test

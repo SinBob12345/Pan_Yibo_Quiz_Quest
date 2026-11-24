@@ -1,9 +1,13 @@
 package com.yibopan.quizquest.viewmodel
 
+import com.yibopan.quizquest.data.model.RetentionPeriod
+import com.yibopan.quizquest.data.model.UserSettings
 import com.yibopan.quizquest.fakes.FakeExportWriter
 import com.yibopan.quizquest.fakes.FakePrivacyRepository
+import com.yibopan.quizquest.fakes.FakeSettingsRepository
 import com.yibopan.quizquest.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -19,23 +23,40 @@ class PrivacyViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var privacyRepo: FakePrivacyRepository
+    private lateinit var settingsRepo: FakeSettingsRepository
     private lateinit var exportWriter: FakeExportWriter
     private lateinit var viewModel: PrivacyViewModel
 
     @Before
     fun setUp() {
         privacyRepo = FakePrivacyRepository()
+        settingsRepo = FakeSettingsRepository()
         exportWriter = FakeExportWriter()
-        viewModel = PrivacyViewModel(privacyRepo, exportWriter)
+        viewModel = PrivacyViewModel(privacyRepo, settingsRepo, exportWriter, timeProvider = { 1000L })
+    }
+
+    @Test
+    fun `fresh UserSettings defaults answerRetention to DAYS_30`() {
+        val settings = UserSettings()
+        assertEquals(RetentionPeriod.DAYS_30, settings.answerRetention)
     }
 
     @Test
     fun `reportedCount is observed and updated in uiState`() = runTest {
         privacyRepo.reportedCountFlow.value = 3
 
-        val viewModel = PrivacyViewModel(privacyRepo, exportWriter)
+        val viewModel = PrivacyViewModel(privacyRepo, settingsRepo, exportWriter, timeProvider = { 1000L })
 
         assertEquals(3, viewModel.uiState.value.reportedCount)
+    }
+
+    @Test
+    fun `updateAnswerRetention saves setting and calls deleteExpiredAnswers`() = runTest {
+        viewModel.updateAnswerRetention(RetentionPeriod.DAYS_90)
+
+        val settings = settingsRepo.getSettings().first()
+        assertEquals(RetentionPeriod.DAYS_90, settings.answerRetention)
+        assertEquals(1, privacyRepo.deleteExpiredAnswersCount)
     }
 
     @Test

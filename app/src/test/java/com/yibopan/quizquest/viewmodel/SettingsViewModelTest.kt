@@ -3,7 +3,6 @@ package com.yibopan.quizquest.viewmodel
 import com.yibopan.quizquest.data.model.RetentionPeriod
 import com.yibopan.quizquest.data.model.ThemeMode
 import com.yibopan.quizquest.data.model.TimerMode
-import com.yibopan.quizquest.fakes.FakePrivacyRepository
 import com.yibopan.quizquest.fakes.FakeSettingsRepository
 import com.yibopan.quizquest.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,17 +23,13 @@ class SettingsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var settingsRepo: FakeSettingsRepository
-    private lateinit var privacyRepo: FakePrivacyRepository
     private lateinit var viewModel: SettingsViewModel
 
     @Before
     fun setUp() {
         settingsRepo = FakeSettingsRepository()
-        privacyRepo = FakePrivacyRepository()
         viewModel = SettingsViewModel(
             settingsRepository = settingsRepo,
-            privacyRepository = privacyRepo,
-            timeProvider = { 1000L },
         )
     }
 
@@ -48,7 +43,7 @@ class SettingsViewModelTest {
         assertTrue(settings.soundEnabled)
         assertFalse(settings.reduceMotion)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
-        assertEquals(RetentionPeriod.DAYS_90, settings.answerRetention)
+        assertEquals(RetentionPeriod.DAYS_30, settings.answerRetention)
     }
 
     @Test
@@ -89,13 +84,10 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `updateThemeMode and updateAnswerRetention update enum settings and prune expired answers`() = runTest {
+    fun `updateThemeMode updates enum settings`() = runTest {
         viewModel.updateThemeMode(ThemeMode.DARK)
-        viewModel.updateAnswerRetention(RetentionPeriod.DAYS_30)
 
         val settings = viewModel.uiState.value.settings
         assertEquals(ThemeMode.DARK, settings.themeMode)
-        assertEquals(RetentionPeriod.DAYS_30, settings.answerRetention)
-        assertEquals(1, privacyRepo.deleteExpiredAnswersCount)
     }
 }

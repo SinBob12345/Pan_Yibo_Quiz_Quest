@@ -205,6 +205,6 @@ class EntityMappersTest {
 
         assertEquals(TimerMode.OFF, settings.timerMode)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
-        assertEquals(RetentionPeriod.DAYS_90, settings.answerRetention)
+        assertEquals(RetentionPeriod.DAYS_30, settings.answerRetention)
     }
 }

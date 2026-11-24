@@ -122,7 +122,7 @@ data class SettingsEntity(
     val reduceMotion: Boolean = false,
     val themeMode: String = "SYSTEM",
     val dailyGoalLevels: Int = 3,
-    val answerRetention: String = "DAYS_90",
+    val answerRetention: String = "DAYS_30",
 )
 
 // ----- Entity <-> Domain Model Mappers -----
@@ -236,7 +236,7 @@ fun SettingsEntity.toUserSettings(): UserSettings = UserSettings(
     reduceMotion = reduceMotion,
     themeMode = try { ThemeMode.valueOf(themeMode) } catch (_: Exception) { ThemeMode.SYSTEM },
     dailyGoalLevels = dailyGoalLevels,
-    answerRetention = try { RetentionPeriod.valueOf(answerRetention) } catch (_: Exception) { RetentionPeriod.DAYS_90 },
+    answerRetention = try { RetentionPeriod.valueOf(answerRetention) } catch (_: Exception) { RetentionPeriod.DAYS_30 },
 )
 
 fun UserSettings.toEntity(): SettingsEntity = SettingsEntity(

@@ -126,16 +126,16 @@
     <string name="settings_retention_title">Answer history retention</string>
     <string name="settings_retention_30">30 days</string>
     <string name="settings_retention_90">90 days</string>
-    <string name="settings_retention_forever">Forever</string>
+    <string name="settings_retention_forever">Until I delete it</string>
     <string name="settings_privacy_entry">Privacy &amp; your data</string>
-    <string name="settings_privacy_entry_desc">What is stored, export and delete</string>
+    <string name="settings_privacy_entry_desc">What is stored, how long we keep it, export and delete</string>
     <string name="privacy_title">Privacy &amp; your data</string>
 
     <!-- Plain-language Privacy & Data Safety -->
     <string name="privacy_what_is_stored_title">What is stored</string>
     <string name="privacy_what_is_stored_desc">Your stars, scores, answer history, review cards and settings are saved only on this phone.</string>
     <string name="privacy_retention_title">How long we keep it</string>
-    <string name="privacy_retention_desc">Your answer history is kept for the time you choose in Settings (30 days, 90 days or until you delete it). Stars, scores and review cards stay until you delete them.</string>
+    <string name="privacy_retention_desc">By default, your detailed answer history is kept for 30 days. You can change this below to 30 days, 90 days or until you delete it. Stars, scores and review cards stay until you delete them.</string>
     <string name="privacy_never_collected_title">What is never collected</string>
     <string name="privacy_never_collected_desc">QuizQuest does not collect or transmit personal names, email addresses, advertising IDs, location data, or analytics telemetry.</string>
     <string name="privacy_opentdb_title">Network requests &amp; OpenTDB</string>

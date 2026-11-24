@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Download
@@ -27,21 +28,26 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yibopan.quizquest.R
+import com.yibopan.quizquest.data.model.RetentionPeriod
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
 import com.yibopan.quizquest.viewmodel.PrivacyMessage
 import com.yibopan.quizquest.viewmodel.PrivacyUIState
@@ -62,7 +69,7 @@ import java.util.Locale
 
 /**
  * "Privacy & your data" screen (A2 commitments #2 and #4; Lecture 9: data safety & user control).
- * Displays plain-language data policies, attribution (CC BY-SA 4.0), file export, deletion, and email feedback.
+ * Displays plain-language data policies, attribution (CC BY-SA 4.0), retention controls, file export, deletion, and email feedback.
  */
 @Composable
 fun PrivacyScreen(onBackPressed: () -> Unit) {
@@ -71,6 +78,7 @@ fun PrivacyScreen(onBackPressed: () -> Unit) {
     PrivacyScreenContent(
         uiState = privacyUIState,
         onBackPressed = onBackPressed,
+        onAnswerRetentionChanged = { privacyViewModel.updateAnswerRetention(it) },
         onSaveExport = { uriString -> privacyViewModel.saveExport(uriString) },
         onRequestDeleteClicked = { privacyViewModel.requestDelete() },
         onConfirmDeleteClicked = { privacyViewModel.confirmDelete() },
@@ -87,6 +95,7 @@ fun PrivacyScreenContent(
     uiState: PrivacyUIState,
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
+    onAnswerRetentionChanged: (RetentionPeriod) -> Unit = {},
     onSaveExport: (String) -> Unit = {},
     onRequestDeleteClicked: () -> Unit = {},
     onConfirmDeleteClicked: () -> Unit = {},
@@ -99,6 +108,8 @@ fun PrivacyScreenContent(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
+    var showRetentionDialog by remember { mutableStateOf(false) }
 
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
     val launcher = rememberLauncherForActivityResult(
@@ -130,6 +141,27 @@ fun PrivacyScreenContent(
             snackbarHostState.showSnackbar(text)
             onMessageShown()
         }
+    }
+
+    // Answer Retention Option Dialog
+    if (showRetentionDialog) {
+        ChoiceDialog(
+            title = stringResource(R.string.settings_retention_title),
+            options = RetentionPeriod.entries,
+            selectedOption = uiState.settings.answerRetention,
+            optionLabel = { period ->
+                when (period) {
+                    RetentionPeriod.DAYS_30 -> stringResource(R.string.settings_retention_30)
+                    RetentionPeriod.DAYS_90 -> stringResource(R.string.settings_retention_90)
+                    RetentionPeriod.FOREVER -> stringResource(R.string.settings_retention_forever)
+                }
+            },
+            onOptionSelected = {
+                onAnswerRetentionChanged(it)
+                showRetentionDialog = false
+            },
+            onDismiss = { showRetentionDialog = false },
+        )
     }
 
     // Neutral Delete All Data AlertDialog with equal visual weight buttons (A2 Commitment #5)
@@ -229,6 +261,23 @@ fun PrivacyScreenContent(
                                 title = stringResource(R.string.privacy_retention_title),
                                 desc = stringResource(R.string.privacy_retention_desc),
                             )
+
+                            // Answer Retention Control directly under "How long we keep it"
+                            val retentionText = when (uiState.settings.answerRetention) {
+                                RetentionPeriod.DAYS_30 -> stringResource(R.string.settings_retention_30)
+                                RetentionPeriod.DAYS_90 -> stringResource(R.string.settings_retention_90)
+                                RetentionPeriod.FOREVER -> stringResource(R.string.settings_retention_forever)
+                            }
+                            OutlinedButton(
+                                onClick = { showRetentionDialog = true },
+                                enabled = !uiState.isWorking,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .defaultMinSize(minHeight = 48.dp),
+                            ) {
+                                Text(text = stringResource(R.string.settings_retention_title) + ": " + retentionText)
+                            }
+
                             PrivacySection(
                                 title = stringResource(R.string.privacy_never_collected_title),
                                 desc = stringResource(R.string.privacy_never_collected_desc),
@@ -391,6 +440,57 @@ fun PrivacyScreenContent(
             }
         }
     }
+}
+
+@Composable
+private fun <T> ChoiceDialog(
+    title: String,
+    options: List<T>,
+    selectedOption: T,
+    optionLabel: @Composable (T) -> String,
+    onOptionSelected: (T) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = title, modifier = Modifier.semantics { heading() }) },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                options.forEach { option ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 48.dp)
+                            .selectable(
+                                selected = (option == selectedOption),
+                                onClick = { onOptionSelected(option) },
+                                role = Role.RadioButton,
+                            )
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        RadioButton(
+                            selected = (option == selectedOption),
+                            onClick = null,
+                        )
+                        Text(
+                            text = optionLabel(option),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cd_back))
+            }
+        },
+    )
 }
 
 private fun sendFeedbackEmail(

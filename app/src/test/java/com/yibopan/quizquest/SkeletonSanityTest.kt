@@ -34,7 +34,7 @@ class SkeletonSanityTest {
     fun defaultSettingsFollowEthicalCommitments() {
         val defaults = UserSettings()
         assertEquals("No timer pressure by default", TimerMode.OFF, defaults.timerMode)
-        assertEquals("Answer history is not kept forever by default", RetentionPeriod.DAYS_90, defaults.answerRetention)
+        assertEquals("Answer history default is 30 days for privacy", RetentionPeriod.DAYS_30, defaults.answerRetention)
     }
 
     @Test

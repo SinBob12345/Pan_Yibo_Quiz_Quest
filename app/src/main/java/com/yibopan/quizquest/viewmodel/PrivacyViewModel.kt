@@ -3,7 +3,11 @@ package com.yibopan.quizquest.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yibopan.quizquest.data.export.ExportWriter
+import com.yibopan.quizquest.data.model.RetentionPeriod
 import com.yibopan.quizquest.data.repository.PrivacyRepository
+import com.yibopan.quizquest.data.repository.SettingsRepository
+import com.yibopan.quizquest.data.rules.SystemTimeProvider
+import com.yibopan.quizquest.data.rules.TimeProvider
 import com.yibopan.quizquest.util.AppLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +19,9 @@ import kotlinx.coroutines.launch
  */
 class PrivacyViewModel(
     private val privacyRepository: PrivacyRepository,
+    private val settingsRepository: SettingsRepository,
     private val exportWriter: ExportWriter,
+    private val timeProvider: TimeProvider = SystemTimeProvider,
 ) : ViewModel() {
 
     private companion object {
@@ -29,6 +35,23 @@ class PrivacyViewModel(
         viewModelScope.launch {
             privacyRepository.observeReportedCount().collect { count ->
                 _uiState.update { it.copy(reportedCount = count) }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { settings ->
+                _uiState.update { it.copy(settings = settings) }
+            }
+        }
+    }
+
+    fun updateAnswerRetention(period: RetentionPeriod) {
+        viewModelScope.launch {
+            val currentSettings = _uiState.value.settings
+            settingsRepository.updateSettings(currentSettings.copy(answerRetention = period))
+            try {
+                privacyRepository.deleteExpiredAnswers(timeProvider.now())
+            } catch (e: Exception) {
+                AppLog.e(TAG, "Failed to delete expired answers after updating retention", e)
             }
         }
     }

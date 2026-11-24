@@ -221,6 +221,13 @@ val appModules = module {
         )
     }
     viewModel { StatsViewModel(statsRepository = get()) }
-    viewModel { SettingsViewModel(settingsRepository = get(), privacyRepository = get(), timeProvider = get()) }
-    viewModel { PrivacyViewModel(privacyRepository = get(), exportWriter = get()) }
+    viewModel { SettingsViewModel(settingsRepository = get()) }
+    viewModel {
+        PrivacyViewModel(
+            privacyRepository = get(),
+            settingsRepository = get(),
+            exportWriter = get(),
+            timeProvider = get(),
+        )
+    }
 }

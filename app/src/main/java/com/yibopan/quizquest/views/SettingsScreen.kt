@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Animation
 import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Quiz
 import androidx.compose.material.icons.rounded.Speed
@@ -50,7 +49,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yibopan.quizquest.R
-import com.yibopan.quizquest.data.model.RetentionPeriod
 import com.yibopan.quizquest.data.model.ThemeMode
 import com.yibopan.quizquest.data.model.TimerMode
 import com.yibopan.quizquest.ui.theme.QuizQuestTheme
@@ -73,7 +71,6 @@ fun SettingsScreen(onPrivacyClicked: () -> Unit) {
         onTimerModeChanged = { settingsViewModel.updateTimerMode(it) },
         onDailyGoalChanged = { settingsViewModel.updateDailyGoal(it) },
         onThemeModeChanged = { settingsViewModel.updateThemeMode(it) },
-        onAnswerRetentionChanged = { settingsViewModel.updateAnswerRetention(it) },
     )
 }
 
@@ -88,7 +85,6 @@ fun SettingsScreenContent(
     onTimerModeChanged: (TimerMode) -> Unit = {},
     onDailyGoalChanged: (Int) -> Unit = {},
     onThemeModeChanged: (ThemeMode) -> Unit = {},
-    onAnswerRetentionChanged: (RetentionPeriod) -> Unit = {},
 ) {
     val settings = uiState.settings
 
@@ -96,7 +92,6 @@ fun SettingsScreenContent(
     var showTimerDialog by remember { mutableStateOf(false) }
     var showDailyGoalDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
-    var showRetentionDialog by remember { mutableStateOf(false) }
 
     if (showQuestionsDialog) {
         ChoiceDialog(
@@ -163,26 +158,6 @@ fun SettingsScreenContent(
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false },
-        )
-    }
-
-    if (showRetentionDialog) {
-        ChoiceDialog(
-            title = stringResource(R.string.settings_retention_title),
-            options = RetentionPeriod.entries,
-            selectedOption = settings.answerRetention,
-            optionLabel = { period ->
-                when (period) {
-                    RetentionPeriod.DAYS_30 -> stringResource(R.string.settings_retention_30)
-                    RetentionPeriod.DAYS_90 -> stringResource(R.string.settings_retention_90)
-                    RetentionPeriod.FOREVER -> stringResource(R.string.settings_retention_forever)
-                }
-            },
-            onOptionSelected = {
-                onAnswerRetentionChanged(it)
-                showRetentionDialog = false
-            },
-            onDismiss = { showRetentionDialog = false },
         )
     }
 
@@ -299,24 +274,6 @@ fun SettingsScreenContent(
                         modifier = Modifier.clickable(
                             onClickLabel = stringResource(R.string.click_label_open),
                             onClick = { showThemeDialog = true },
-                        ),
-                    )
-                }
-
-                // Answer retention
-                item {
-                    val retentionText = when (settings.answerRetention) {
-                        RetentionPeriod.DAYS_30 -> stringResource(R.string.settings_retention_30)
-                        RetentionPeriod.DAYS_90 -> stringResource(R.string.settings_retention_90)
-                        RetentionPeriod.FOREVER -> stringResource(R.string.settings_retention_forever)
-                    }
-                    ListItem(
-                        headlineContent = { Text(text = stringResource(R.string.settings_retention_title)) },
-                        supportingContent = { Text(text = retentionText) },
-                        leadingContent = { Icon(imageVector = Icons.Rounded.History, contentDescription = null) },
-                        modifier = Modifier.clickable(
-                            onClickLabel = stringResource(R.string.click_label_open),
-                            onClick = { showRetentionDialog = true },
                         ),
                     )
                 }
